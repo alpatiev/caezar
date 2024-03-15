@@ -45,10 +45,7 @@ class PromptModule:
 
     @staticmethod
     def msg_server_chosen(server_name):
-        return f"""
-    ✅ {server_name}
-    ✅ Updated database.
-    """
+        return f"✅ {server_name}"
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /info
@@ -105,7 +102,7 @@ class PromptModule:
 
     @staticmethod
     def msg_api_key_update_success():
-        return "✅ Successfully updated and verified api key."
+        return "✅ New API key is set up."
     # ----------------------------------------------
     # SECTION: MESSAGES - /prompt
     # [msg_prompt_<name>()]
@@ -126,8 +123,8 @@ class PromptModule:
         return "Send image in .JPG format:"
     
     @staticmethod
-    def msg_image_upload_success():
-        return "✅ Successfully uploaded image."
+    def msg_image_upload_success(image_size_kb):
+        return f"✅ Uploaded image {image_size_kb} kb."
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /run
