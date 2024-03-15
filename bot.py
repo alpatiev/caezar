@@ -18,39 +18,42 @@ class BotModule:
         self.prompt_module = prompt_module
         self.log_module = log_module
 
-    # Start the bot
+    # SECTION: Start application
 
     def start(self):
         self.storage_module.connect_database()
         self.__start_logging()
         self.__run_application()
 
-    # Configure methods
-    
+    # SECTION: Configure methods
+
     def __start_logging(self):
         logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
         logger = logging.getLogger(__name__)
    
     def __run_application(self):
         application = Application.builder().token(self.bot_token).build()
-        application.add_handler(CommandHandler("start", handler_command_start))
-        application.add_handler(CommandHandler("help", handler_command_help))
-        application.add_handler(CommandHandler("service", handler_command_mode))
-        application.add_handler(CallbackQueryHandler(handler_callback_mode))
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handler_typed_text))
-        application.add_handler(MessageHandler(filters.PHOTO, handler_typed_image))
+        application.add_handler(CommandHandler("start", self.__handler_command_start))
+        application.add_handler(CommandHandler("help", self.__handler_command_help))
+        application.add_handler(CommandHandler("service", self.__handler_command_mode))
+        application.add_handler(CallbackQueryHandler(self.__handler_callback_mode))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.__handler_typed_text))
+        application.add_handler(MessageHandler(filters.PHOTO, self.__handler_typed_image))
         application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-    # MARK: - Command handlers
+    # SECTION: Command handlers
 
-    async def handler_command_start(update: Update, context) -> None:
+    async def __handler_command_start(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
-        await context.bot.send_message(chat_id=update.message.chat_id, text=CONSTANTS.MSG_STUB_LOGIN)
+        reply = self.prompt_module.msg_start_enter_password_placeholder()
+        await context.bot.send_message(chat_id=chat_id, text=reply)
 
-    async def handler_command_help(update: Update, context) -> None:
-        await context.bot.send_message(chat_id=update.message.chat_id, text=CONSTANTS.MSG_STUB_HELP_LIST)
+    async def __handler_command_help(self, update: Update, context) -> None:
+        chat_id = update.message.chat_id
+        reply = self.prompt_module.msg_help_show_help_info()
+        await context.bot.send_message(chat_id=chat_id, text=reply)
 
-    async def handler_command_mode(update: Update, context) -> None:
+    async def __handler_command_mode(self, update: Update, context) -> None:
         keyboard = []
         for mode_data in config.bot_polling_mode:
             button = InlineKeyboardButton(mode_data['title'], callback_data=mode_data['action'])
@@ -58,21 +61,20 @@ class BotModule:
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text("Choose bot mode: ", reply_markup=reply_markup)
 
-    # MARK: - Callback handlers
+    # SECTION: Callback handlers
 
-    async def handler_callback_mode(update: Update, context) -> None:
+    async def __handler_callback_mode(self, update: Update, context) -> None:
         query = update.callback_query
         mode = query.data
         await query.answer()
         await query.edit_message_text(text=f"Selected mode: {mode}")
 
-    # MARK: - Message handlers
+    # SECTION: Message handlers
 
-    async def handler_typed_text(update: Update, context) -> None:
-        await context.bot.send_message(chat_id=update.message.chat_id, text=CONSTANTS.MSG_STUB_HELP_LIST)
-        await update.message.reply_text("Not a command. Type /help")
+    async def __handler_typed_text(self, update: Update, context) -> None:
+        await update.message.reply_text("Not a command. Type /help for instructions")
 
-    async def handler_typed_image(update: Update, context) -> None:
+    async def __handler_typed_image(self, update: Update, context) -> None:
         photo_objects = update.message.photo
         photo_file = await context.bot.get_file(photo_objects[-1])
         if photo_file.file_path.endswith('.jpg') or photo_file.file_path.endswith('.jpeg'): 

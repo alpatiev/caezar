@@ -1,7 +1,6 @@
 # Descirption
 Multitasking bot for local or backend deployment.
 
-
 # Installation
 Steps listed below.
 1. Create and activate environment.
@@ -21,6 +20,7 @@ Pipeline for reboot and first run.
 ```
 source env/bin/activate 
 ```
+
 2. Run
 ```
 python app.py

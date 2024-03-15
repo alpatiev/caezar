@@ -1,13 +1,17 @@
 import sqlite3
 import CONSTANTS
 
-# INFO: Storage module
-# Main storage class for CRUD operations
-
+# --------------------------------------------------
+# NOTE: Storage module
+# Main storage class for SQL operations
+#
 class StorageModule:
-    def __init__(self):
-        self.db_path = CONSTANTS.PATH_DATABASE
+    def __init__(self, db_path):
+        self.db_path = db_path
         self.conn = None
+
+    # ----------------------------------------------
+    # SECTION: Storage lifecycle
 
     def connect_database(self):
         try:
@@ -17,6 +21,17 @@ class StorageModule:
         except sqlite3.Error as e:
             return False, 
 
+    def disconnect_database(self):
+        if self.conn:
+            self.conn.close()
+            self.conn = None
+            return True
+        else:
+            return False, "no database connection to disconnect"
+
+    # ----------------------------------------------
+    # SECTION: CRUD methods
+
     def create_table(self):
         try:
             cursor = self.conn.cursor()
@@ -24,6 +39,7 @@ class StorageModule:
                               (key TEXT PRIMARY KEY,
                               value TEXT);''')
             self.conn.commit()
+            cursor.close()
             return True
         except sqlite3.Error as e:
             return False, e
@@ -33,6 +49,7 @@ class StorageModule:
             cursor = self.conn.cursor()
             cursor.execute("INSERT OR REPLACE INTO data (key, value) VALUES (?, ?)", (key, value))
             self.conn.commit()
+            cursor.close()
             return True
         except sqlite3.Error as e:
             return False, e
@@ -42,6 +59,7 @@ class StorageModule:
             cursor = self.conn.cursor()
             cursor.execute("SELECT value FROM data WHERE key=?", (key,))
             result = cursor.fetchone()
+            cursor.close()
             if result:
                 return result[0]
             else:
@@ -54,13 +72,7 @@ class StorageModule:
             cursor = self.conn.cursor()
             cursor.execute("DELETE FROM data WHERE key=?", (key,))
             self.conn.commit()
+            cursor.close()
             return True
         except sqlite3.Error as e:
             return False, e
-
-    def disconnect_database(self):
-        if self.conn:
-            self.conn.close()
-            return True
-        else:
-            return False, "no database connection to disconnect"
