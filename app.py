@@ -1,4 +1,5 @@
 import sys
+import constants
 from bot import BotModule
 from logs import LogModule
 from replies import PromptModule
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     bot_token = sys.argv[1]
     auth_key = sys.argv[2]
 
-    storage_module = StorageModule(CONSTANTS.PATH_DATABASE)
+    storage_module = StorageModule(constants.PATH_DATABASE)
     prompt_module = PromptModule()
     log_module = LogModule()
     bot_module = BotModule(bot_token, auth_key, storage_module, prompt_module, log_module)

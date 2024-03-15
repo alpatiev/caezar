@@ -2,22 +2,24 @@ import sys
 import json
 import time
 import logging
-import CONSTANTS
+import constants
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
-# INFO: Storage module
+# --------------------------------------------------
+# NOTE: Storage module
 # Bot class that provides dispatching logic
-
+#
 class BotModule:
-    def __init__(self, bot_token, auth_admin_key, storage_module, prompt_module, log_module):
+    def __init__(self, bot_token, auth_key, storage_module, prompt_module, log_module):
         self.bot_token = bot_token
-        self.auth_admin_key = auth_admin_key
+        self.auth_key = auth_key
         self.image_buffer = None
         self.storage_module = storage_module
         self.prompt_module = prompt_module
         self.log_module = log_module
 
+    # ----------------------------------------------
     # SECTION: Start application
 
     def start(self):
@@ -25,6 +27,7 @@ class BotModule:
         self.__start_logging()
         self.__run_application()
 
+    # ----------------------------------------------
     # SECTION: Configure methods
 
     def __start_logging(self):
@@ -41,6 +44,7 @@ class BotModule:
         application.add_handler(MessageHandler(filters.PHOTO, self.__handler_typed_image))
         application.run_polling(allowed_updates=Update.ALL_TYPES)
 
+    # ----------------------------------------------
     # SECTION: Command handlers
 
     async def __handler_command_start(self, update: Update, context) -> None:
@@ -61,6 +65,7 @@ class BotModule:
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text("Choose bot mode: ", reply_markup=reply_markup)
 
+    # ----------------------------------------------
     # SECTION: Callback handlers
 
     async def __handler_callback_mode(self, update: Update, context) -> None:
@@ -69,6 +74,7 @@ class BotModule:
         await query.answer()
         await query.edit_message_text(text=f"Selected mode: {mode}")
 
+    # ----------------------------------------------
     # SECTION: Message handlers
 
     async def __handler_typed_text(self, update: Update, context) -> None:

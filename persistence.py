@@ -1,5 +1,5 @@
 import sqlite3
-import CONSTANTS
+import constants
 
 # --------------------------------------------------
 # NOTE: Storage module
@@ -16,7 +16,7 @@ class StorageModule:
     def connect_database(self):
         try:
             self.conn = sqlite3.connect(self.db_path)
-            self.create_table()
+            self.__create_tables()
             return True
         except sqlite3.Error as e:
             return False, 
@@ -29,48 +29,125 @@ class StorageModule:
         else:
             return False, "no database connection to disconnect"
 
+    def __create_tables(self):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(f'''CREATE TABLE IF NOT EXISTS {constants.DB_TABLE_KEY_ID_LIST}
+                              (id TEXT PRIMARY KEY);''')
+            cursor.execute(f'''CREATE TABLE IF NOT EXISTS {constants.DB_TABLE_KEY_USERS_LIST}
+                              (id TEXT PRIMARY KEY,
+                              {constants.DB_ROW_KEY_USER_IMAGE_PATH} TEXT,
+                              {constants.DB_ROW_KEY_USER_PIPELINE} TEXT,
+                              {constants.DB_ROW_KEY_USER_PROMPT} TEXT);''')
+            cursor.execute(f'''CREATE TABLE IF NOT EXISTS {constants.DB_TABLE_KEY_LOGS_LIST}
+                              ({constants.DB_ROW_KEY_LOG_MESSAGE} TEXT);''')
+            self.conn.commit()
+            cursor.close()
+            return True
+        except sqlite3.Error as e:
+            return False, e
+
     # ----------------------------------------------
-    # SECTION: CRUD methods
+    # SECTION: Ids table
+    # Table for key DB_TABLE_KEY_ID_LIST
 
-    def create_table(self):
+    def fetch_all_ids(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute('''CREATE TABLE IF NOT EXISTS data
-                              (key TEXT PRIMARY KEY,
-                              value TEXT);''')
+            cursor.execute(f"SELECT id FROM {constants.DB_TABLE_KEY_ID_LIST}")
+            result = cursor.fetchall()
+            cursor.close()
+            return [row[0] for row in result]
+        except sqlite3.Error as e:
+            return False, e
+
+    def update_selected_id(self, id):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(f"INSERT OR IGNORE INTO {constants.DB_TABLE_KEY_ID_LIST} (id) VALUES (?)", (id,))
             self.conn.commit()
             cursor.close()
             return True
         except sqlite3.Error as e:
             return False, e
 
-    def save_value(self, key, value):
+    def delete_selected_id(self, id):
         try:
             cursor = self.conn.cursor()
-            cursor.execute("INSERT OR REPLACE INTO data (key, value) VALUES (?, ?)", (key, value))
+            cursor.execute(f"DELETE FROM {constants.DB_TABLE_KEY_ID_LIST} WHERE id=?", (id,))
             self.conn.commit()
             cursor.close()
             return True
         except sqlite3.Error as e:
             return False, e
 
-    def get_value(self, key):
+    # ----------------------------------------------
+    # SECTION: Users table
+    # Table for key DB_TABLE_KEY_ID_LIST
+
+    def fetch_selected_user(self, id):
         try:
             cursor = self.conn.cursor()
-            cursor.execute("SELECT value FROM data WHERE key=?", (key,))
+            cursor.execute(f"SELECT * FROM {constants.DB_TABLE_KEY_USERS_LIST} WHERE id=?", (id,))
             result = cursor.fetchone()
             cursor.close()
-            if result:
-                return result[0]
-            else:
-                return False, f"no value found for key {key}"
+            return result
         except sqlite3.Error as e:
             return False, e
 
-    def delete_value(self, key):
+    def update_selected_user(self, item):
+        try:
+            table = constants.DB_TABLE_KEY_USERS_LIST
+            path = constants.DB_ROW_KEY_USER_IMAGE_PATH
+            pipe = constants.DB_ROW_KEY_USER_PIPELINE
+            prom = constants.DB_ROW_KEY_USER_PROMPT
+            cursor = self.conn.cursor()
+            cursor.execute(f"INSERT OR REPLACE INTO {table} (id, {path}, {pipe}, {prom}) VALUES (?, ?, ?, ?)",
+                           (item.id, item.image_path, item.pipeline, item.prompt))
+            self.conn.commit()
+            cursor.close()
+            return True
+        except sqlite3.Error as e:
+            return False, e
+    
+    def delete_selected_user(self, id):
         try:
             cursor = self.conn.cursor()
-            cursor.execute("DELETE FROM data WHERE key=?", (key,))
+            cursor.execute(f"DELETE FROM {constants.DB_TABLE_KEY_USERS_LIST} WHERE id=?", (id,))
+            self.conn.commit()
+            cursor.close()
+            return True
+        except sqlite3.Error as e:
+            return False, e
+
+    # ----------------------------------------------
+    # SECTION: Logs table
+    # Table for key DB_TABLE_KEY_LOGS_LIST
+
+    def fetch_all_logs(self):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(f"SELECT {constants.DB_ROW_KEY_LOG_MESSAGE} FROM {constants.DB_TABLE_KEY_LOGS_LIST}")
+            result = cursor.fetchall()
+            cursor.close()
+            return [row[0] for row in result]
+        except sqlite3.Error as e:
+            return False, e
+
+    def delete_all_logs(self):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(f"DELETE FROM {constants.DB_TABLE_KEY_LOGS_LIST}")
+            self.conn.commit()
+            cursor.close()
+            return True
+        except sqlite3.Error as e:
+            return False, e
+
+    def update_selected_log(self, text):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(f"INSERT INTO {constants.DB_TABLE_KEY_LOGS_LIST} ({constants.DB_ROW_KEY_LOG_MESSAGE}) VALUES (?)", (text,))
             self.conn.commit()
             cursor.close()
             return True
