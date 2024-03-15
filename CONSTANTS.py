@@ -41,3 +41,8 @@ BOT_CONTEXT_KEY_AWAITING_IMAGE = "awaiting_image"
 
 API_ID_STABILITY_AI = "stability.ai"
 API_ID_LOCAL_PROCESSING = "server.machine"
+
+# SECTION: Debounce settings
+# [TIME_S_<NAME>]
+TIME_S_WATCH_THROTTLE = 20
+TIME_S_MSG_THROTTLE = 2

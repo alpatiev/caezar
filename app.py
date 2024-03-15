@@ -5,7 +5,9 @@ from logs import LogModule
 from replies import PromptModule
 from persistence import StorageModule
 
-# python app.py 6368855906:AAFChqeoftuth2Y7LsOhkpgOSMMoD7yoD2o ps4jYK4gv0Accq3o
+# TOKEN 6368855906:AAFChqeoftuth2Y7LsOhkpgOSMMoD7yoD2o
+# CHAT_ID 983280553
+# python app.py 6368855906:AAFChqeoftuth2Y7LsOhkpgOSMMoD7yoD2o 983280553
 
 # --------------------------------------------------
 # NOTE: Entry point

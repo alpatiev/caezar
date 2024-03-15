@@ -23,7 +23,7 @@ source env/bin/activate
 
 2. Run
 ```
-python app.py
+python app.py <bot_token> <target_chat>
 ```
 
 # Exit codes reference.
