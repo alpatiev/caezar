@@ -2,7 +2,9 @@ import sys
 import json
 import time
 import logging
+import asyncio
 import constants
+from observer import QueueObserver
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
@@ -11,9 +13,10 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 # Bot class that provides dispatching logic
 #
 class BotModule:
-    def __init__(self, bot_token, auth_key, storage_module, prompt_module, log_module):
+    def __init__(self, bot_token, chat_id, storage_module, prompt_module, log_module):
         self.bot_token = bot_token
-        self.auth_key = auth_key
+        self.chat_id = chat_id
+        self.bot = None
         self.image_buffer = None
         self.storage_module = storage_module
         self.prompt_module = prompt_module
@@ -24,11 +27,17 @@ class BotModule:
 
     def start(self):
         self.storage_module.connect_database()
+        self.__start_observing()
         self.__start_logging()
         self.__run_application()
 
     # ----------------------------------------------
     # SECTION: Configure methods
+
+    def __start_observing(self):  
+        target_path = constants.PATH_MESSAGE_QUEUE
+        self.queue_module = QueueObserver(target_path, self.__recieved_new_shared_message) 
+        self.queue_module.start()
 
     def __start_logging(self):
         logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -49,6 +58,7 @@ class BotModule:
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.__handler_typed_text))
         application.add_handler(MessageHandler(filters.PHOTO, self.__handler_typed_image))
         application.run_polling(allowed_updates=Update.ALL_TYPES)
+        self.bot = application.bot
 
     # ----------------------------------------------
     # SECTION: Configure methods
@@ -61,15 +71,17 @@ class BotModule:
         result = self.storage_module.update_selected_id(chat_id)
 
     def __verified_chat(self, chat_id):
-        ids = self.storage_module.fetch_all_ids()
-        id_str = f"{chat_id}"
-        return id_str in ids
+        #ids = self.storage_module.fetch_all_ids()
+        #id_str = f"{chat_id}"
+        #return id_str in ids
+        return self.chat_id is chat_id
     
     # ----------------------------------------------
     # SECTION: Command handlers
 
     async def __handler_command_start(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
+        print(chat_id)
         placeholder = self.prompt_module.msg_start_enter_password_placeholder()
         await context.bot.send_message(chat_id=chat_id, text=placeholder)
         context.user_data[constants.BOT_CONTEXT_KEY_AUTHORIZING] = True
@@ -227,3 +239,8 @@ class BotModule:
             unauthorized_reply = self.prompt_module.err_start_invalid_password()
             await context.bot.send_message(chat_id=chat_id, text=unauthorized_reply)           
     
+    # ----------------------------------------------
+    # SECTION: Message queue handlers
+
+    def __recieved_new_shared_message(self, message):
+        print(f">> {message}")

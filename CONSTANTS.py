@@ -3,6 +3,7 @@
 # [PATH_<NAME>] 
 
 PATH_DATABASE = "database.sqlite"
+PATH_MESSAGE_QUEUE = "buffer.json"
 
 # --------------------------------------------------
 # SECTION: Database keys

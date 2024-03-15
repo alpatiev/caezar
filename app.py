@@ -9,7 +9,7 @@ from persistence import StorageModule
 
 # --------------------------------------------------
 # NOTE: Entry point
-# Expects two arguments <bot_token> and <auth_key>:
+# Expects two arguments <bot_token> and <chat_id>:
 #   bot_token - specific telefram bot token
 #   auth_key - authorization key, protects fraudulent users 
 # All users and logs stored in database.sqlite
@@ -18,10 +18,15 @@ if __name__ == "__main__":
     if len(sys.argv) != 3:
         sys.exit(1)
     bot_token = sys.argv[1]
-    auth_key = sys.argv[2]
+    chat_id = sys.argv[2]
 
     storage_module = StorageModule(constants.PATH_DATABASE)
     prompt_module = PromptModule()
     log_module = LogModule()
-    bot_module = BotModule(bot_token, auth_key, storage_module, prompt_module, log_module)
+    bot_module = BotModule(
+        bot_token, 
+        chat_id, 
+        storage_module,
+        prompt_module, 
+        log_module)
     bot_module.start()
