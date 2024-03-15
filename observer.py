@@ -41,7 +41,6 @@ class QueueObserver:
                 message_queue = data.get('message_queue', [])
                 if message_queue:
                     for message in message_queue:
-                        time.sleep(const.TIME_S_MSG_THROTTLE)
                         if self.callback:
                             self.callback(message)
                     data['message_queue'] = []

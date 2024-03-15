@@ -26,12 +26,14 @@ class PromptModule:
         used_mem = "{:.2f}".format(mem.used / (1024 * 1024))
         return f"""
 -------------------------------------
-✅ {system_time} SYSTEM IS UP
+✅ SYSTEM IS UP
 -------------------------------------
-RAM stats   :
-Total       : {total_mem} MB
-Available   : {available_mem} MB
-Used        : {used_mem} MB
+{system_time} 
+-------------------------------------
+RAM stats  
+Total _________ {total_mem} MB
+Available _____ {available_mem} MB
+Used __________ {used_mem} MB
 -------------------------------------
 """
 
@@ -77,13 +79,13 @@ Used        : {used_mem} MB
 -------------------------------------
 Running on Ubuntu 22.04
 -------------------------------------
-CPU usage   : {cpu_percent}%
-CPU count   : {cpu_count}
+CPU usage _____ {cpu_percent}%
+CPU count _____ {cpu_count}
 -------------------------------------
-RAM stats   :
-Total       : {total_mem} MB
-Available   : {available_mem} MB
-Used        : {used_mem} MB
+RAM stats  
+Total _________ {total_mem} MB
+Available _____ {available_mem} MB
+Used __________ {used_mem} MB
 -------------------------------------
 {formatted_addresses}
 -------------------------------------

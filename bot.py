@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 import time
@@ -29,12 +30,24 @@ class BotModule:
 
     def start(self):
         self.storage_module.connect_database()
+        self.__schedule_boot_message()
         self.__start_observing()
         self.__start_logging()
         self.__run_application()
 
     # ----------------------------------------------
     # SECTION: Configure methods
+
+    def __schedule_boot_message(self):
+        boot_message = self.prompt_module.msg_start_system_is_up()
+        if not os.path.exists('buffer.json'):
+            with open('buffer.json', 'w') as file:
+                json.dump({'message_queue': []}, file)
+        with open('buffer.json', 'r+') as file:
+            data = json.load(file)
+            data['message_queue'].append(boot_message)
+            file.seek(0)
+            json.dump(data, file)
 
     def __start_observing(self):  
         target_path = const.PATH_MESSAGE_QUEUE
@@ -56,8 +69,6 @@ class BotModule:
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.__handler_typed_text))
         self.application.add_handler(MessageHandler(filters.PHOTO, self.__handler_typed_image))
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
-        boot_message = self.prompt_module.msg_start_system_is_up()
-        self.send_message(chat_id, boot_message)
 
     # ----------------------------------------------
     # SECTION: Authorization methods
@@ -165,4 +176,4 @@ class BotModule:
 
     async def send_message(self, chat_id, message):
         await self.application.bot.send_message(chat_id=chat_id, text=message)
-        self.application.run_polling()
+        self.application.run_polling(allowed_updates=Update.ALL_TYPES)
