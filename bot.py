@@ -176,13 +176,20 @@ class BotModule:
         prompt_state = constants.BOT_CONTEXT_KEY_AWAITING_PROMPT
         chat_id = update.message.chat_id
 
+        if context.user_data[auth_state] is not None:
+            if self.__verified_auth(update.message.text):
+                if auth_state in context.user_data and context.user_data[auth_state]:
+                    context.user_data[auth_state] = None
+                    success = self.prompt_module.msg_start_registered_bot_for_chat(chat_id)
+                    self.__verify_chat(chat_id)
+                    await context.bot.send_message(chat_id=chat_id, text=success)    
+            else:
+                unauthorized_reply = self.prompt_module.err_start_invalid_password()
+                await context.bot.send_message(chat_id=chat_id, text=unauthorized_reply)
+                return
+
         if self.__verified_chat(chat_id):
-            if auth_state in context.user_data and context.user_data[auth_state]:
-                context.user_data[auth_state] = None
-                success = self.prompt_module.msg_start_registered_bot_for_chat(chat_id)
-                self.__verify_chat(chat_id)
-                await context.bot.send_message(chat_id=chat_id, text=success)
-            elif api_key_state in context.user_data and context.user_data[api_key_state]:
+            if api_key_state in context.user_data and context.user_data[api_key_state]:
                 context.user_data[api_key_state] = None
                 success = self.prompt_module.msg_api_key_update_success()
                 await context.bot.send_message(chat_id=chat_id, text=success)
@@ -193,7 +200,7 @@ class BotModule:
             else:
                 return
         else:
-            unauthorized_reply = self.prompt_module.err_start_invalid_password()
+            unauthorized_reply = self.prompt_module.err_reply_unauthorized_chat()
             await context.bot.send_message(chat_id=chat_id, text=unauthorized_reply)
 
     async def __handler_typed_image(self, update: Update, context) -> None:

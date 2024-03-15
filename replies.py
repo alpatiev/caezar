@@ -159,7 +159,6 @@ Reach out @alpatievvv to report the issue.
     def err_start_invalid_password():
         return """
 ⛔️ Invalid password. 
-Reach out @alpatievvv to get this.
 """
 
     # ----------------------------------------------
