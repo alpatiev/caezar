@@ -1,7 +1,7 @@
 import os
 import json
 import threading
-import constants
+import const
 import time
 
 class QueueObserver:
@@ -27,7 +27,7 @@ class QueueObserver:
 
     def watch_file(self):
         while self.running:
-            time.sleep(constants.TIME_S_WATCH_THROTTLE)
+            time.sleep(const.TIME_S_WATCH_THROTTLE)
             if os.path.exists(self.target_path):
                 last_change = os.path.getmtime(self.target_path)
                 if last_change != self.last_modified:
@@ -41,7 +41,7 @@ class QueueObserver:
                 message_queue = data.get('message_queue', [])
                 if message_queue:
                     for message in message_queue:
-                        time.sleep(constants.TIME_S_MSG_THROTTLE)
+                        time.sleep(const.TIME_S_MSG_THROTTLE)
                         if self.callback:
                             self.callback(message)
                     data['message_queue'] = []

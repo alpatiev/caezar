@@ -3,7 +3,7 @@ import json
 import time
 import logging
 import asyncio
-import constants
+import const
 import subprocess
 from observer import QueueObserver
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -37,7 +37,7 @@ class BotModule:
     # SECTION: Configure methods
 
     def __start_observing(self):  
-        target_path = constants.PATH_MESSAGE_QUEUE
+        target_path = const.PATH_MESSAGE_QUEUE
         self.queue_module = QueueObserver(target_path, self.__received_new_shared_message) 
         self.queue_module.start()
 
@@ -56,6 +56,8 @@ class BotModule:
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.__handler_typed_text))
         self.application.add_handler(MessageHandler(filters.PHOTO, self.__handler_typed_image))
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+        boot_message = self.prompt_module.msg_start_system_is_up()
+        self.send_message(chat_id, boot_message)
 
     # ----------------------------------------------
     # SECTION: Authorization methods
@@ -138,7 +140,7 @@ class BotModule:
     async def __handler_typed_text(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
         if self.__verified_chat(chat_id):
-            reply = self.prompt_module.msg_reboot_server()
+            reply = self.prompt_module.msg_common_echo_message(update.message.text)
         else:
             reply = self.prompt_module.err_common_unauthorized_chat() 
         await context.bot.send_message(chat_id=chat_id, text=reply)        
@@ -146,7 +148,7 @@ class BotModule:
     async def __handler_typed_image(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
         if self.__verified_chat(chat_id):
-            reply = self.prompt_module.msg_reboot_server()
+            reply = self.prompt_module.msg_common_echo_image()
         else:
             reply = self.prompt_module.err_common_unauthorized_chat() 
         await context.bot.send_message(chat_id=chat_id, text=reply)           

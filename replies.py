@@ -1,4 +1,5 @@
 import psutil
+from datetime import datetime
 
 # --------------------------------------------------
 # INFO: Prompt module 
@@ -15,6 +16,24 @@ class PromptModule:
     @staticmethod
     def msg_start_registered_bot_for_chat(chat_id):
         return f"✅ Started bot for chat {chat_id}"
+
+    @staticmethod
+    def msg_start_system_is_up():
+        system_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        mem = psutil.virtual_memory()
+        total_mem = "{:.2f}".format(mem.total / (1024 * 1024))
+        available_mem = "{:.2f}".format(mem.available / (1024 * 1024))
+        used_mem = "{:.2f}".format(mem.used / (1024 * 1024))
+        return f"""
+-------------------------------------
+✅ {system_time} SYSTEM IS UP
+-------------------------------------
+RAM stats   :
+Total       : {total_mem} MB
+Available   : {available_mem} MB
+Used        : {used_mem} MB
+-------------------------------------
+"""
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /help
@@ -58,12 +77,13 @@ class PromptModule:
 -------------------------------------
 Running on Ubuntu 22.04
 -------------------------------------
-CPU Usage: {cpu_percent}%
-CPU Count: {cpu_count}
+CPU usage   : {cpu_percent}%
+CPU count   : {cpu_count}
 -------------------------------------
-Total Memory: {total_mem} MB
-Available Memory: {available_mem} MB
-Used Memory: {used_mem} MB
+RAM stats   :
+Total       : {total_mem} MB
+Available   : {available_mem} MB
+Used        : {used_mem} MB
 -------------------------------------
 {formatted_addresses}
 -------------------------------------
@@ -85,9 +105,10 @@ Used Memory: {used_mem} MB
         return f"❔ {message}"
 
     @staticmethod
-    def msg_common_echo_image(image):
-        file_size_kb = image.sizr
-        return f"❔ {file_size_kb} kb"
+    def msg_common_echo_image():
+        #file_size_kb = image.sizr
+        #return f"❔ {file_size_kb} kb"
+        return f"❔ Image"
 
     @staticmethod
     def msg_common_received_text_from_queue(message):

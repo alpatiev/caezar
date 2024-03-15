@@ -1,4 +1,4 @@
-import constants
+import const
 
 # --------------------------------------------------
 # NOTE: Log module
