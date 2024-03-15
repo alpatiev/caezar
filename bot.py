@@ -33,37 +33,129 @@ class BotModule:
     def __start_logging(self):
         logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
         logger = logging.getLogger(__name__)
-   
+
     def __run_application(self):
         application = Application.builder().token(self.bot_token).build()
         application.add_handler(CommandHandler("start", self.__handler_command_start))
         application.add_handler(CommandHandler("help", self.__handler_command_help))
-        application.add_handler(CommandHandler("service", self.__handler_command_mode))
+        application.add_handler(CommandHandler("info", self.__handler_command_info))
+        application.add_handler(CommandHandler("debug", self.__handler_command_debug))
+        application.add_handler(CommandHandler("server", self.__handler_command_server))
+        application.add_handler(CommandHandler("api_key", self.__handler_command_api_key))
+        application.add_handler(CommandHandler("image", self.__handler_command_image))
+        application.add_handler(CommandHandler("prompt", self.__handler_command_prompt))
+        application.add_handler(CommandHandler("run", self.__handler_command_run))
         application.add_handler(CallbackQueryHandler(self.__handler_callback_mode))
         application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.__handler_typed_text))
         application.add_handler(MessageHandler(filters.PHOTO, self.__handler_typed_image))
         application.run_polling(allowed_updates=Update.ALL_TYPES)
 
     # ----------------------------------------------
+    # SECTION: Configure methods
+
+    def __verified_auth(self, auth_key):
+        print(self.auth_key, auth_key)
+        return auth_key == self.auth_key
+
+    def __verify_chat(self, chat_id):
+        result = self.storage_module.update_selected_id(chat_id)
+
+    def __verfied_chat(self, chat_id):
+        ids = self.storage_module.fetch_all_ids()
+        id_str = f"{chat_id}"
+        return id_str in ids
+    
+    # ----------------------------------------------
     # SECTION: Command handlers
 
     async def __handler_command_start(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
-        reply = self.prompt_module.msg_start_enter_password_placeholder()
-        await context.bot.send_message(chat_id=chat_id, text=reply)
+        placeholder = self.prompt_module.msg_start_enter_password_placeholder()
+        await context.bot.send_message(chat_id=chat_id, text=placeholder)
+        context.user_data[constants.BOT_CONTEXT_KEY_AUTHORIZING] = True
 
     async def __handler_command_help(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
-        reply = self.prompt_module.msg_help_show_help_info()
+        if self.__verfied_chat(chat_id):
+            reply = self.prompt_module.msg_help_show_help_info()
+        else:
+            reply = self.prompt_module.err_reply_unauthorized_chat() 
         await context.bot.send_message(chat_id=chat_id, text=reply)
 
-    async def __handler_command_mode(self, update: Update, context) -> None:
-        keyboard = []
-        for mode_data in config.bot_polling_mode:
-            button = InlineKeyboardButton(mode_data['title'], callback_data=mode_data['action'])
-            keyboard.append([button])
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text("Choose bot mode: ", reply_markup=reply_markup)
+    async def __handler_command_info(self, update: Update, context) -> None:
+        chat_id = update.message.chat_id
+        if self.__verfied_chat(chat_id):
+            reply = self.prompt_module.msg_info_stub_message()
+        else:
+            reply = self.prompt_module.err_reply_unauthorized_chat() 
+        await context.bot.send_message(chat_id=chat_id, text=reply)
+
+    async def __handler_command_debug(self, update: Update, context) -> None:
+        chat_id = update.message.chat_id
+        if self.__verfied_chat(chat_id):
+            reply = self.prompt_module.msg_debug_stub_message()
+        else:
+            reply = self.prompt_module.err_reply_unauthorized_chat() 
+        await context.bot.send_message(chat_id=chat_id, text=reply)
+
+    async def __handler_command_server(self, update: Update, context) -> None:
+        chat_id = update.message.chat_id
+        if self.__verfied_chat(chat_id):        
+            keyboard = [
+                [InlineKeyboardButton(
+                    constants.API_ID_STABILITY_AI,
+                    callback_data=constants.API_ID_STABILITY_AI
+                    ),
+                InlineKeyboardButton(
+                    constants.API_ID_LOCAL_PROCESSING,
+                    callback_data=constants.API_ID_LOCAL_PROCESSING
+                    )   
+                ]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_prompt = self.prompt_module.msg_server_choose_placeholder()
+            await update.message.reply_text(reply_prompt, reply_markup=reply_markup)
+        else:
+            reply = self.prompt_module.err_reply_unauthorized_chat() 
+            await context.bot.send_message(chat_id=chat_id, text=reply)
+    
+    async def __handler_command_api_key(self, update: Update, context) -> None:
+        chat_id = update.message.chat_id
+        if self.__verfied_chat(chat_id):
+                placeholder = self.prompt_module.msg_api_key_enter_placeholder()
+                await context.bot.send_message(chat_id=chat_id, text=placeholder)
+                context.user_data[constants.BOT_CONTEXT_KEY_AWAITING_API_KEY] = True 
+        else:
+            error = self.prompt_module.err_reply_unauthorized_chat() 
+            await context.bot.send_message(chat_id=chat_id, text=error)
+
+    async def __handler_command_prompt(self, update: Update, context) -> None:
+        chat_id = update.message.chat_id
+        if self.__verfied_chat(chat_id):
+                placeholder = self.prompt_module.msg_prompt_enter_placeholder()
+                await context.bot.send_message(chat_id=chat_id, text=placeholder)
+                context.user_data[constants.BOT_CONTEXT_KEY_AWAITING_PROMPT] = True 
+        else:
+            error = self.prompt_module.err_reply_unauthorized_chat() 
+            await context.bot.send_message(chat_id=chat_id, text=error)
+
+    async def __handler_command_image(self, update: Update, context) -> None:
+        chat_id = update.message.chat_id
+        if self.__verfied_chat(chat_id):
+                placeholder = self.prompt_module.msg_image_enter_placeholder()
+                await context.bot.send_message(chat_id=chat_id, text=placeholder)
+                context.user_data[constants.BOT_CONTEXT_KEY_AWAITING_IMAGE] = True 
+        else:
+            error = self.prompt_module.err_reply_unauthorized_chat() 
+            await context.bot.send_message(chat_id=chat_id, text=error)
+
+    async def __handler_command_run(self, update: Update, context) -> None:
+        chat_id = update.message.chat_id
+        if self.__verfied_chat(chat_id):
+            reply = self.prompt_module.msg_run_begin_task()
+        else:
+            reply = self.prompt_module.err_reply_unauthorized_chat() 
+        await context.bot.send_message(chat_id=chat_id, text=reply)
 
     # ----------------------------------------------
     # SECTION: Callback handlers
@@ -71,16 +163,46 @@ class BotModule:
     async def __handler_callback_mode(self, update: Update, context) -> None:
         query = update.callback_query
         mode = query.data
+        reply = self.storage_module.msg_server_chosen(mode)
         await query.answer()
-        await query.edit_message_text(text=f"Selected mode: {mode}")
+        await query.edit_message_text(text=reply)
 
     # ----------------------------------------------
     # SECTION: Message handlers
 
     async def __handler_typed_text(self, update: Update, context) -> None:
-        await update.message.reply_text("Not a command. Type /help for instructions")
+        auth_state = constants.BOT_CONTEXT_KEY_AUTHORIZING
+        api_key_state = constants.BOT_CONTEXT_KEY_AWAITING_API_KEY
+        prompt_state = constants.BOT_CONTEXT_KEY_AWAITING_PROMPT
+        image_state = constants.BOT_CONTEXT_KEY_AWAITING_IMAGE
+        chat_id = update.message.chat_id
+
+        if self.__verified_auth(update.message.text):
+            if auth_state in context.user_data and context.user_data[auth_state]:
+                context.user_data[auth_state] = None
+                success = self.prompt_module.msg_start_registered_bot_for_chat(chat_id)
+                self.__verify_chat(chat_id)
+                await context.bot.send_message(chat_id=chat_id, text=success)
+            elif api_key_state in context.user_data and context.user_data[api_key_state]:
+                context.user_data[api_key_state] = None
+                success = self.prompt_module.msg_api_key_update_success()
+                await context.bot.send_message(chat_id=chat_id, text=success)
+            elif prompt_state in context.user_data and context.user_data[prompt_state]:
+                context.user_data[prompt_state] = None
+                success = self.prompt_module.msg_prompt_update_success()
+                await context.bot.send_message(chat_id=chat_id, text=success)
+            elif image_state in context.user_data and context.user_data[image_state]:
+                context.user_data[image_state] = None
+                success = self.prompt_module.msg_image_upload_success()
+                await context.bot.send_message(chat_id=chat_id, text=success)
+            else:
+                return
+        else:
+            unauthorized_reply = self.prompt_module.err_start_invalid_password()
+            await context.bot.send_message(chat_id=chat_id, text=unauthorized_reply)
 
     async def __handler_typed_image(self, update: Update, context) -> None:
+        return 
         photo_objects = update.message.photo
         photo_file = await context.bot.get_file(photo_objects[-1])
         if photo_file.file_path.endswith('.jpg') or photo_file.file_path.endswith('.jpeg'): 

@@ -26,8 +26,17 @@ LOG_EVENT_KEY_ERROR = "ERROR___"
 LOG_EVENT_KEY_INFO = "INFO____"
 
 # --------------------------------------------------
+# SECTION: LOGS - Bot context keys
+# [BOT_CONTEXT_KEY_<NAME>]
+
+BOT_CONTEXT_KEY_AUTHORIZING = "awaiting_password"
+BOT_CONTEXT_KEY_AWAITING_API_KEY = "awaiting_key"
+BOT_CONTEXT_KEY_AWAITING_PROMPT = "awaiting_prompt"
+BOT_CONTEXT_KEY_AWAITING_IMAGE = "awaiting_image"
+
+# --------------------------------------------------
 # SECTION: Module identifiers
 # [API_ID_<NAME>]
 
-API_ID_STABILITY_AI = "Stability.ai"
-API_ID_LOCAL_PROCESSING = "Server machine"
+API_ID_STABILITY_AI = "stability.ai"
+API_ID_LOCAL_PROCESSING = "server.machine"
