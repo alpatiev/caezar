@@ -1,27 +1,26 @@
 import sqlite3
-import const
+from module import BotModule
 
 # --------------------------------------------------
-# NOTE: Storage module
+# ENTITY: STORAGE
 # Main storage class for SQL operations
-#
-class StorageModule:
-    def __init__(self, db_path):
-        self.db_path = db_path
-        self.conn = None
+
+class StorageModule(BotModule):
 
     # ----------------------------------------------
-    # SECTION: Storage lifecycle
+    # SECTION: LIFECYCLE
 
-    def connect_database(self):
+    def __init__(self):
+        pass
+
+    def start(self, config):
         try:
             self.conn = sqlite3.connect(self.db_path)
             self.__create_tables()
-            return True
         except sqlite3.Error as e:
             return False, 
 
-    def disconnect_database(self):
+    def stop(self):
         if self.conn:
             self.conn.close()
             self.conn = None
@@ -29,18 +28,21 @@ class StorageModule:
         else:
             return False, "no database connection to disconnect"
 
+    # ----------------------------------------------
+    # SECTION: SETUPS
+    
+    def __configure(self, config):
+        pass
+
     def __create_tables(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f'''CREATE TABLE IF NOT EXISTS {const.DB_TABLE_KEY_ID_LIST}
-                              (id TEXT PRIMARY KEY);''')
-            cursor.execute(f'''CREATE TABLE IF NOT EXISTS {const.DB_TABLE_KEY_USERS_LIST}
+            cursor.execute(f'''CREATE TABLE IF NOT EXISTS {self.TK_USR_LIST}
                               (id TEXT PRIMARY KEY,
-                              {const.DB_ROW_KEY_USER_IMAGE_PATH} TEXT,
-                              {const.DB_ROW_KEY_USER_PIPELINE} TEXT,
-                              {const.DB_ROW_KEY_USER_PROMPT} TEXT);''')
-            cursor.execute(f'''CREATE TABLE IF NOT EXISTS {const.DB_TABLE_KEY_LOGS_LIST}
-                              ({const.DB_ROW_KEY_LOG_MESSAGE} TEXT);''')
+                              {self.RK_USR_DIR} TEXT,
+                              {self.RK_USR_INFO_MSG} TEXT);''')
+            cursor.execute(f'''CREATE TABLE IF NOT EXISTS {self.TK_LOG_LIST}
+                              ({self.RK_LOG_ITEM} TEXT);''')
             self.conn.commit()
             cursor.close()
             return True
@@ -54,7 +56,7 @@ class StorageModule:
     def fetch_all_ids(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"SELECT id FROM {const.DB_TABLE_KEY_ID_LIST}")
+            cursor.execute(f"SELECT id FROM {self.DB_TABLE_KEY_ID_LIST}")
             result = cursor.fetchall()
             cursor.close()
             return [row[0] for row in result]
@@ -64,7 +66,7 @@ class StorageModule:
     def update_selected_id(self, id):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"INSERT OR IGNORE INTO {const.DB_TABLE_KEY_ID_LIST} (id) VALUES (?)", (id,))
+            cursor.execute(f"INSERT OR IGNORE INTO {self.DB_TABLE_KEY_ID_LIST} (id) VALUES (?)", (id,))
             self.conn.commit()
             cursor.close()
             return True
@@ -74,7 +76,7 @@ class StorageModule:
     def delete_selected_id(self, id):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"DELETE FROM {const.DB_TABLE_KEY_ID_LIST} WHERE id=?", (id,))
+            cursor.execute(f"DELETE FROM {self.DB_TABLE_KEY_ID_LIST} WHERE id=?", (id,))
             self.conn.commit()
             cursor.close()
             return True
@@ -88,7 +90,7 @@ class StorageModule:
     def fetch_selected_user(self, id):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"SELECT * FROM {const.DB_TABLE_KEY_USERS_LIST} WHERE id=?", (id,))
+            cursor.execute(f"SELECT * FROM {self.DB_TABLE_KEY_USERS_LIST} WHERE id=?", (id,))
             result = cursor.fetchone()
             cursor.close()
             return result
@@ -97,10 +99,10 @@ class StorageModule:
 
     def update_selected_user(self, item):
         try:
-            table = const.DB_TABLE_KEY_USERS_LIST
-            path = const.DB_ROW_KEY_USER_IMAGE_PATH
-            pipe = const.DB_ROW_KEY_USER_PIPELINE
-            prom = const.DB_ROW_KEY_USER_PROMPT
+            table = self.DB_TABLE_KEY_USERS_LIST
+            path = self.DB_ROW_KEY_USER_IMAGE_PATH
+            pipe = self.DB_ROW_KEY_USER_PIPELINE
+            prom = self.DB_ROW_KEY_USER_PROMPT
             cursor = self.conn.cursor()
             cursor.execute(f"INSERT OR REPLACE INTO {table} (id, {path}, {pipe}, {prom}) VALUES (?, ?, ?, ?)",
                            (item.id, item.image_path, item.pipeline, item.prompt))
@@ -113,7 +115,7 @@ class StorageModule:
     def delete_selected_user(self, id):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"DELETE FROM {const.DB_TABLE_KEY_USERS_LIST} WHERE id=?", (id,))
+            cursor.execute(f"DELETE FROM {self.DB_TABLE_KEY_USERS_LIST} WHERE id=?", (id,))
             self.conn.commit()
             cursor.close()
             return True
@@ -121,13 +123,13 @@ class StorageModule:
             return False, e
 
     # ----------------------------------------------
-    # SECTION: Logs table
+    # SECTION: LOGS
     # Table for key DB_TABLE_KEY_LOGS_LIST
 
     def fetch_all_logs(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"SELECT {const.DB_ROW_KEY_LOG_MESSAGE} FROM {const.DB_TABLE_KEY_LOGS_LIST}")
+            cursor.execute(f"SELECT {self.DB_ROW_KEY_LOG_MESSAGE} FROM {self.DB_TABLE_KEY_LOGS_LIST}")
             result = cursor.fetchall()
             cursor.close()
             return [row[0] for row in result]
@@ -137,7 +139,7 @@ class StorageModule:
     def delete_all_logs(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"DELETE FROM {const.DB_TABLE_KEY_LOGS_LIST}")
+            cursor.execute(f"DELETE FROM {self.DB_TABLE_KEY_LOGS_LIST}")
             self.conn.commit()
             cursor.close()
             return True
@@ -147,7 +149,7 @@ class StorageModule:
     def update_selected_log(self, text):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"INSERT INTO {const.DB_TABLE_KEY_LOGS_LIST} ({const.DB_ROW_KEY_LOG_MESSAGE}) VALUES (?)", (text,))
+            cursor.execute(f"INSERT INTO {self.DB_TABLE_KEY_LOGS_LIST} ({self.DB_ROW_KEY_LOG_MESSAGE}) VALUES (?)", (text,))
             self.conn.commit()
             cursor.close()
             return True

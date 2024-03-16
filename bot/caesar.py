@@ -4,62 +4,65 @@ import json
 import time
 import logging
 import asyncio
-import const
 import subprocess
-from observer import QueueObserver
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters
+from logger import LogModule
+from storer import StorageModule
+from publisher import PublisherModule
+from storer import StorageModule
 
 # --------------------------------------------------
-# NOTE: Storage module
-# Bot class that provides dispatching logic
-#
-class BotModule:
-    def __init__(self, bot_token, chat_id, storage_module, prompt_module, log_module):
-        self.bot_token = bot_token
-        self.chat_id = chat_id
-        self.image_buffer = None
-        self.context = None
-        self.application = None
-        self.storage_module = storage_module
-        self.prompt_module = prompt_module
-        self.log_module = log_module
+# ENTITY: BOT
+# Bot class that provides dispatching logic.
+# Only one instance per one folder are allowed.
+
+class CaesarBot:
 
     # ----------------------------------------------
-    # SECTION: Start application
+    # SECTION: LIFECYCLE
+
+    def __init__(self):
+        self.application = None
+        self.module_logger = None
+        self.module_storage = None
+        self.module_prompts = None
+        self.module_publisher = None
+        self.bot_token = None
+        self.root_chat = None
 
     def start(self):
-        self.storage_module.connect_database()
-        self.__schedule_boot_message()
+        config = self.__load_config()
+        self.__start_init_modules(config)
         self.__start_observing()
         self.__start_logging()
         self.__run_application()
 
+    def stop(self):
+        sys.exit(0)
+
     # ----------------------------------------------
-    # SECTION: Configure methods
+    # SECTION: SETUPS
 
-    def __schedule_boot_message(self):
-        boot_message = self.prompt_module.msg_start_system_is_up()
-        if not os.path.exists('buffer.json'):
-            with open('buffer.json', 'w') as file:
-                json.dump({'message_queue': []}, file)
-        with open('buffer.json', 'r+') as file:
-            data = json.load(file)
-            data['message_queue'].append(boot_message)
-            file.seek(0)
-            json.dump(data, file)
+    def __load_config(self):
+        print("called")
+        return "4"
 
-    def __start_observing(self):  
-        target_path = const.PATH_MESSAGE_QUEUE
-        self.queue_module = QueueObserver(target_path, self.__received_new_shared_message) 
-        self.queue_module.start()
+    def __start_init_modules(self, config):
+        self.__schedule_boot_message()
+        ##self.storage_module.connect_database()
+
+    def __start_message_observing(self):  
+        self.module_publisher = MessagePublisher(self.config_path, self.__received_new_shared_message) 
+        self.module_publisher.start()
 
     def __start_logging(self):
-        logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+        logging.basicConfig(format="[%(asctime)s] [%(levelname)s] [%(name)s] [%(message)s]", level=logging.INFO)
         logger = logging.getLogger(__name__)
 
-    def __run_application(self):
+    def __start_application(self):
         self.application = Application.builder().token(self.bot_token).build()
+        self.__schedule_boot_message()
         self.application.add_handler(CommandHandler("start", self.__handler_command_start))
         self.application.add_handler(CommandHandler("help", self.__handler_command_help))
         self.application.add_handler(CommandHandler("select", self.__handler_command_select))
@@ -71,7 +74,7 @@ class BotModule:
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
     # ----------------------------------------------
-    # SECTION: Authorization methods
+    # SECTION: AUTH
 
     def __verified_chat(self, chat_id):
         lhs = f"{chat_id}"
@@ -79,7 +82,7 @@ class BotModule:
         return lhs == rhs
     
     # ----------------------------------------------
-    # SECTION: Command handlers
+    # SECTION: COMMAND HANDLERS
 
     async def __handler_command_start(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
@@ -136,7 +139,7 @@ class BotModule:
         subprocess.run(["reboot"])
 
     # ----------------------------------------------
-    # SECTION: Callback handlers
+    # SECTION: CALLBACK HANDLERS
 
     async def __handler_callback_select_command(self, update: Update, context) -> None:
         query = update.callback_query
@@ -146,7 +149,7 @@ class BotModule:
         await query.edit_message_text(text=reply)
 
     # ----------------------------------------------
-    # SECTION: Message handlers
+    # SECTION: MESSAGE HANDLERS
 
     async def __handler_typed_text(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
@@ -165,15 +168,23 @@ class BotModule:
         await context.bot.send_message(chat_id=chat_id, text=reply)           
     
     # ----------------------------------------------
-    # SECTION: Message queue handlers
+    # SECTION: PUBLISH METHODS
+
+    def __schedule_boot_message(self):
+        boot_message = self.prompt_module.msg_start_system_is_up()
+        with open('buffer.json', 'r+') as file:
+            data = json.load(file)
+            data['message_queue'].append(boot_message)
+            file.seek(0)
+            json.dump(data, file)
 
     def __received_new_shared_message(self, message):
         try:
             formatted_message = self.prompt_module.msg_common_received_text_from_queue(message)
-            asyncio.run(self.send_message(self.chat_id, formatted_message))
+            asyncio.run(self.__send_message(self.chat_id, formatted_message))
         except Exception as e:
             print("Error sending message:", e)       
 
-    async def send_message(self, chat_id, message):
+    async def __send_message(self, chat_id, message):
         await self.application.bot.send_message(chat_id=chat_id, text=message)
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)

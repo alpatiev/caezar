@@ -1,12 +1,23 @@
 import psutil
 from datetime import datetime
+from module import BotModule
 
 # --------------------------------------------------
-# INFO: Prompt module 
+# ENTITY: PROMPT
 # Creates replies and user messages
 
-class PromptModule:
+class PromptModule(BotModule):
+    
+    # ----------------------------------------------
+    # SECTION: LIFECYCLE
+
     def __init__(self):
+        pass
+
+    def __start(self):
+        pass
+
+    def __stop(self):
         pass
 
     # ----------------------------------------------

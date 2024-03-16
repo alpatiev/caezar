@@ -1,0 +1,57 @@
+# --------------------------------------------------
+# ENTITY: CONFIGURATION
+# Any changes may cause unexpected behaviour.
+# Loaded once at bot start.
+
+---
+# --------------------------------------------------
+# SECTION: AUTH
+authentification:
+  bot_token: "6368855906:AAFChqeoftuth2Y7LsOhkpgOSMMoD7yoD2o"
+  root_chat: "983280553"
+
+# --------------------------------------------------
+# SECTION: RESOURCES
+resources_path:
+  database: "database.sqlite"
+  buffer: "buffer.json"
+
+# --------------------------------------------------
+# SECTION: DATABASE
+
+database:
+  chat_list_table:
+    key: "chats"
+    row_keys:
+      - media_dir: "media_dir"
+      - info_message: "info_msg"
+  logs_list_table:
+    key: "logs"
+    row_keys:
+      - item: "item"
+
+# --------------------------------------------------
+# SECTION: LOGGING
+log_key:
+  warning: "WARINING"
+  success: "SUCCESS_"
+  error: "ERROR___"
+  info: "INFO____"
+
+# --------------------------------------------------
+# SECTION: CONTEXT
+message_context_key:
+  awaiting_auth: "awaiting_password"
+  awaiting_prompt: "awaiting_prompt"
+  awaiting_image: "awaiting_image"
+
+# --------------------------------------------------
+# SECTION: TARGETS
+module_target_id:
+  local: "server.machine"
+  stability: "stability.ai"
+
+# --------------------------------------------------
+# SECTION: THREADING
+threading:
+  observing_interval: 20

@@ -1,29 +1,43 @@
 import os
 import json
 import threading
-import const
 import time
+from module import BotModule
 
-class QueueObserver:
-    def __init__(self, target_path, callback):
+# --------------------------------------------------
+# ENTITY: STORAGE
+# Main storage class for SQL operations
+
+class PublisherModule(BotModule):
+
+    # ----------------------------------------------
+    # SECTION: LIFECYCLE
+
+    def __init__(self):
         self.target_path = target_path
-        self.callback = callback
+        self.message_queue_callback = None
         self.running = False
         self.thread = None
         self.last_modified = None
 
-    def start(self):
+    def start(self, config, message_queue_callback):
         if not os.path.exists(self.target_path):
             self.create_initial_file()
-
         self.running = True
+        self.message_queue_callback = message_queue_callback
         self.thread = threading.Thread(target=self.watch_file)
         self.thread.start()
+
+    # ----------------------------------------------
+    # SECTION: SETUPS
 
     def create_initial_file(self):
         initial_data = {"message_queue": []}
         with open(self.target_path, 'w') as file:
             json.dump(initial_data, file, indent=4)
+
+    # ----------------------------------------------
+    # SECTION: OBSERVING
 
     def watch_file(self):
         while self.running:
@@ -41,8 +55,8 @@ class QueueObserver:
                 message_queue = data.get('message_queue', [])
                 if message_queue:
                     for message in message_queue:
-                        if self.callback:
-                            self.callback(message)
+                        if self.message_queue_callback:
+                            self.message_queue_callback(message)
                     data['message_queue'] = []
                     self.write_data(data)
 
