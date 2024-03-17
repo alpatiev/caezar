@@ -74,7 +74,8 @@ def install_application():
 
 def update_application():
     stop_application()
-    os.system("git pull")
+    os.system("git fetch origin")
+    os.system("git reset --hard origin/master")
     start_application()
 
 # --------------------------------------------------
