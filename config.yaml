@@ -8,7 +8,8 @@
 # SECTION: AUTH
 bot_threading:
   pid: ""
-  observing_interval: 20
+  throttling_time: 2
+  observing_interval: 10
 
 # --------------------------------------------------
 # SECTION: AUTH

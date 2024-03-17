@@ -19,6 +19,8 @@ class PublisherModule(BotModule):
         self.message_queue_callback = None
         self.thread = None
         self.last_modified = None
+        self.SEC_INTERVAL = None
+        self.SEC_THROTTLE = None
         self.MESSAGE_QUEUE_KEY = "message_queue"
 
     def start(self, config, message_queue_callback):
@@ -35,8 +37,9 @@ class PublisherModule(BotModule):
 
     def __configure(self, config):
         self.target_path = config.get("resources_path", {}).get("buffer", None)
-        self.INTERVAL = config.get("bot_threading", {}).get("observing_interval", None)
-    
+        self.SEC_INTERVAL = config.get("bot_threading", {}).get("observing_interval", None)
+        self.SEC_THROTTLE = config.get("bot_threading", {}).get("throttling_time", None)
+
     def __create_default_file(self):
         initial_data = {self.MESSAGE_QUEUE_KEY: []}
         with open(self.target_path, 'w') as file:
@@ -47,7 +50,7 @@ class PublisherModule(BotModule):
 
     def watch_file(self):
         while self.running:
-            time.sleep(self.INTERVAL)
+            time.sleep(self.SEC_INTERVAL)
             if os.path.exists(self.target_path):
                 last_change = os.path.getmtime(self.target_path)
                 if last_change != self.last_modified:
@@ -62,6 +65,7 @@ class PublisherModule(BotModule):
                 if message_queue:
                     for message in message_queue:
                         if self.message_queue_callback:
+                            time.sleep(self.SEC_THROTTLE)
                             self.message_queue_callback(message)
                     data[self.MESSAGE_QUEUE_KEY] = []
                     self.write_data(data)

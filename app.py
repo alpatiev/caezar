@@ -2,19 +2,22 @@ import os
 import re
 import sys
 import yaml
+import time
 
 # --------------------------------------------------
 # SECTION: CONSOLE
 
 def console_help():
     print("""
-python app.py [--install | --update | --start | --stop | --view | --auth <token> <chat>]
+python app.py [--install | --update | --start | --stop   |   
+               --reboot  | --view   | --auth <token> <chat>]
 
 Options:
   --install     Install the application.
   --update      Update the application with repo and run.
   --start       Start the bot on background.
   --stop        Stop the bot, terminate deamon.
+  --reboot      Restarting this bot.
   --view        Enter application console
   --auth        Save new configuration, 
                 requires token and chat arguments.
@@ -111,6 +114,14 @@ def stop_application():
         print(">>> bot is not running")
 
 # --------------------------------------------------
+# SECTION: REBOOT
+
+def reboot_application():
+    stop_application()
+    time.sleep(2)
+    start_application()
+
+# --------------------------------------------------
 # SECTION: VIEW
 
 def view_application():
@@ -142,6 +153,8 @@ if __name__ == "__main__":
         start_application()
     elif "--stop" in sys.argv:
         stop_application()
+    elif "--reboot" in sys.argv:
+        reboot_application()
     elif "--view" in sys.argv:
         view_application()
     elif "--auth" in sys.argv:

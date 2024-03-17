@@ -5,7 +5,7 @@ import time
 import logging
 import asyncio
 import subprocess
-from app import parse_config, update_pid
+from app import parse_config, update_pid, update_application, reboot_application, stop_application
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, ContextTypes, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 from logger import LoggerModule
@@ -70,7 +70,8 @@ class CaesarBot:
     def __start_application(self):
         self.application = Application.builder().token(self.TG_TOKEN).build()
         self.job_queue = self.application.job_queue
-        self.__schedule_boot_message()
+        boot_message = self.module_prompts.msg_start_report()
+        self.__callback_root_chat(boot_message)
         self.application.add_handler(CommandHandler("start", self.__handler_command_start))
         self.application.add_handler(CommandHandler("help", self.__handler_command_help))
         self.application.add_handler(CommandHandler("select", self.__handler_command_select))
@@ -172,6 +173,8 @@ class CaesarBot:
             reply = self.module_prompts.err_any_unauthorized_chat()
             self.module_logger.info_unrecognized_chat_attempt("/update", chat_id) 
         await context.bot.send_message(chat_id=chat_id, text=reply)
+        self.application.stop_
+        update_application()
 
     # ----------------------------------------------
     # COMMAND: REBOOT
@@ -184,8 +187,7 @@ class CaesarBot:
             reply = self.module_prompts.err_any_unauthorized_chat() 
             self.module_logger.info_unrecognized_chat_attempt("/reboot", chat_id)
         await context.bot.send_message(chat_id=chat_id, text=reply)
-        update_pid("")
-        subprocess.run(["reboot"])
+        reboot_application()
 
     # ----------------------------------------------
     # COMMAND: SHUTDOWN
@@ -198,9 +200,7 @@ class CaesarBot:
             reply = self.module_prompts.err_any_unauthorized_chat() 
             self.module_logger.info_unrecognized_chat_attempt("/shutdown", chat_id)
         await context.bot.send_message(chat_id=chat_id, text=reply)
-        update_pid("")
-        subprocess.run(["reboot"])
-
+        stop_application()
     # ----------------------------------------------
     # HANDLERS: CALLBACKS
 
@@ -233,15 +233,7 @@ class CaesarBot:
         await context.bot.send_message(chat_id=chat_id, text=reply)           
     
     # ----------------------------------------------
-    # SECTION: PUBLISH METHODS
-
-    def __schedule_boot_message(self):
-        boot_message = self.module_prompts.msg_start_report()
-        with open('buffer.json', 'r+') as file:
-            data = json.load(file)
-            data['message_queue'].append(boot_message)
-            file.seek(0)
-            json.dump(data, file)
+    # SECTION: PUBLISH METHODS       
 
     def __callback_root_chat(self, message):
         try:

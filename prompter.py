@@ -16,10 +16,10 @@ class PromptModule(BotModule):
         pass
 
     def start(self, config):
-        print(">>> module_prompt started..")
+        return 0
 
     def stop(self):
-        print(">>> module_prompt stopped")
+        return 0
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /start
@@ -38,18 +38,20 @@ class PromptModule(BotModule):
         total_mem = "{:.2f}".format(mem.total / (1024 * 1024))
         available_mem = "{:.2f}".format(mem.available / (1024 * 1024))
         used_mem = "{:.2f}".format(mem.used / (1024 * 1024))
+        ram_percent = mem.percent
         return f"""
 ✅ SYSTEM IS UP
 🕑 {system_time}
 ⚙️ {machine}
 
 CPU stats:
-➖ load {cpu_percent}$
+➖ load  {cpu_percent}%
 
-RAM stats, MB: 
-➖ total {total_mem}
-➖ available {available_mem}
-➖ used {used_mem} 
+RAM stats: 
+➖ load  {ram_percent}%
+➖ total  {total_mem} MB
+➖ free   {available_mem} MB
+➖ used  {used_mem} MB
 """
 
     # ----------------------------------------------
@@ -61,8 +63,8 @@ RAM stats, MB:
 /start ➖ start private bot
 /help ➖ show list of commands
 /select ➖ choose task to execute
-/system ➖ show system info
-/reboot ➖ reboot system (OS)
+/system ➖ show server info
+/reboot ➖ reboot this bot
 /update ➖ update and reboot bot
 /shutdown ➖ shut down the bot
 """
@@ -91,18 +93,20 @@ RAM stats, MB:
         total_mem = "{:.2f}".format(mem.total / (1024 * 1024))
         available_mem = "{:.2f}".format(mem.available / (1024 * 1024))
         used_mem = "{:.2f}".format(mem.used / (1024 * 1024))
+        ram_percent = mem.percent
         return f"""
 ℹ️ SYSTEM INFO
 🕑 {system_time}
 ⚙️ {machine}
 
 CPU stats:
-➖ load {cpu_percent}$
+➖ load  {cpu_percent}%
 
-RAM stats, MB: 
-➖ total {total_mem}
-➖ available {available_mem}
-➖ used {used_mem} 
+RAM stats: 
+➖ load  {ram_percent}%
+➖ total  {total_mem} MB
+➖ free   {available_mem} MB
+➖ used  {used_mem} MB
 """
     
     # ----------------------------------------------
@@ -110,14 +114,24 @@ RAM stats, MB:
 
     @staticmethod
     def msg_cmd_reboot():
-        return "⏳ Restarting the server.."
+        return "⏳ Restarting the the bot.."
+
+    # ----------------------------------------------
+    # SECTION: MESSAGES - /update
+
+    @staticmethod
+    def msg_cmd_update():
+        return """
+⏳ Updating the bot version..
+❕ Bot will be relaunched soon.
+"""
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /shutdown
 
     @staticmethod
     def msg_cmd_shutdown():
-        return "⏳ Restarting the server.."
+        return "💀 Shutting down the bot.."
 
     # ----------------------------------------------
     # SECTION: MESSAGES - common messages
