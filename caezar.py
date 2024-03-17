@@ -81,6 +81,7 @@ class CaesarBot:
         self.application.add_handler(CallbackQueryHandler(self.__handler_callback_select_command))
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.__handler_typed_text))
         self.application.add_handler(MessageHandler(filters.PHOTO, self.__handler_typed_image))
+        self.module_logger.info_app_launched()
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
 
     # ----------------------------------------------
@@ -97,10 +98,11 @@ class CaesarBot:
     async def __handler_command_start(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
         if self.__verified_chat(chat_id):
-            reply = self.module_prompts.msg_start_registered_bot_for_chat(chat_id)
+            reply = self.module_prompts.msg_start_success(chat_id)
             self.context = context
         else:
             reply = self.module_prompts.err_any_unauthorized_chat() 
+            self.module_logger.info_unrecognized_chat_attempt("/start", chat_id)
         await context.bot.send_message(chat_id=chat_id, text=reply)
 
     # ----------------------------------------------
@@ -112,6 +114,7 @@ class CaesarBot:
             reply = self.module_prompts.msg_cmd_help()
         else:
             reply = self.module_prompts.err_any_unauthorized_chat() 
+            self.module_logger.info_unrecognized_chat_attempt("/help", chat_id)
         await context.bot.send_message(chat_id=chat_id, text=reply)
 
     # ----------------------------------------------
@@ -141,7 +144,8 @@ class CaesarBot:
             reply_prompt = self.module_prompts.msg_cmd_select_placeholder()
             await update.message.reply_text(reply_prompt, reply_markup=reply_markup)
         else:
-            reply = self.module_prompts.err_any_unauthorized_chat() 
+            reply = self.module_prompts.err_any_unauthorized_chat()
+            self.module_logger.info_unrecognized_chat_attempt("/select", chat_id)
             await context.bot.send_message(chat_id=chat_id, text=reply)
     
 
@@ -154,6 +158,7 @@ class CaesarBot:
             reply = self.module_prompts.msg_cmd_system()
         else:
             reply = self.module_prompts.err_any_unauthorized_chat() 
+            self.module_logger.info_unrecognized_chat_attempt("/system", chat_id)
         await context.bot.send_message(chat_id=chat_id, text=reply)
     
     # ----------------------------------------------
@@ -164,7 +169,8 @@ class CaesarBot:
         if self.__verified_chat(chat_id):
             reply = self.module_prompts.msg_cmd_update()
         else:
-            reply = self.module_prompts.err_any_unauthorized_chat() 
+            reply = self.module_prompts.err_any_unauthorized_chat()
+            self.module_logger.info_unrecognized_chat_attempt("/update", chat_id) 
         await context.bot.send_message(chat_id=chat_id, text=reply)
 
     # ----------------------------------------------
@@ -176,6 +182,7 @@ class CaesarBot:
             reply = self.module_prompts.msg_cmd_reboot()
         else:
             reply = self.module_prompts.err_any_unauthorized_chat() 
+            self.module_logger.info_unrecognized_chat_attempt("/reboot", chat_id)
         await context.bot.send_message(chat_id=chat_id, text=reply)
         update_pid("")
         subprocess.run(["reboot"])
@@ -189,6 +196,7 @@ class CaesarBot:
             reply = self.module_prompts.msg_cmd_shutdown()
         else:
             reply = self.module_prompts.err_any_unauthorized_chat() 
+            self.module_logger.info_unrecognized_chat_attempt("/shutdown", chat_id)
         await context.bot.send_message(chat_id=chat_id, text=reply)
         update_pid("")
         subprocess.run(["reboot"])
@@ -211,7 +219,8 @@ class CaesarBot:
         if self.__verified_chat(chat_id):
             reply = self.module_prompts.msg_any_echo_text(update.message.text)
         else:
-            reply = self.module_prompts.err_any_unauthorized_chat() 
+            reply = self.module_prompts.err_any_unauthorized_chat()
+            self.module_logger.info_unrecognized_chat_attempt("text", chat_id) 
         await context.bot.send_message(chat_id=chat_id, text=reply)        
 
     async def __handler_typed_image(self, update: Update, context) -> None:
@@ -219,14 +228,15 @@ class CaesarBot:
         if self.__verified_chat(chat_id):
             reply = self.module_prompts.msg_any_echo_image()
         else:
-            reply = self.module_prompts.err_any_unauthorized_chat() 
+            reply = self.module_prompts.err_any_unauthorized_chat()
+            self.module_logger.info_unrecognized_chat_attempt("media", chat_id) 
         await context.bot.send_message(chat_id=chat_id, text=reply)           
     
     # ----------------------------------------------
     # SECTION: PUBLISH METHODS
 
     def __schedule_boot_message(self):
-        boot_message = self.module_prompts.msg_any_boot()
+        boot_message = self.module_prompts.msg_start_report()
         with open('buffer.json', 'r+') as file:
             data = json.load(file)
             data['message_queue'].append(boot_message)
@@ -237,11 +247,12 @@ class CaesarBot:
         try:
             self.scheduled_message = message
             self.application.job_queue.run_once(self.__root_chat_publisher, 0)
-        except Exception as e:
-            print("Error sending message:", e)       
+        except Exception:
+            self.module_logger.error_sending_notification()       
 
     async def __root_chat_publisher(self, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=self.ID_ROOT_CHAT, text=self.scheduled_message)
+        self.module_logger.event_sent_notification()
 
 # --------------------------------------------------
 # SECTION: MAIN

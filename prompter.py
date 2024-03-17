@@ -1,3 +1,4 @@
+import os
 import psutil
 from datetime import datetime
 from module import BotModule
@@ -22,96 +23,104 @@ class PromptModule(BotModule):
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /start
-    # [msg_start_<name>()]
 
     @staticmethod
-    def msg_start_registered_bot_for_chat(chat_id):
+    def msg_start_success(chat_id):
         return f"✅ Started bot for chat {chat_id}"
 
     @staticmethod
-    def msg_any_boot():
-        system_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    def msg_start_report():
+        system_info = os.uname()
+        machine = system_info.nodename
+        system_time = datetime.now().strftime("%B %d %Y %H:%M")
         mem = psutil.virtual_memory()
+        cpu_percent = psutil.cpu_percent()
         total_mem = "{:.2f}".format(mem.total / (1024 * 1024))
         available_mem = "{:.2f}".format(mem.available / (1024 * 1024))
         used_mem = "{:.2f}".format(mem.used / (1024 * 1024))
         return f"""
--------------------------------------
 ✅ SYSTEM IS UP
--------------------------------------
-{system_time} 
--------------------------------------
-RAM stats  
-Total _________ {total_mem} MB
-Available _____ {available_mem} MB
-Used __________ {used_mem} MB
--------------------------------------
+🕑 {system_time}
+⚙️ {machine}
+
+CPU stats:
+➖ load {cpu_percent}$
+
+RAM stats, MB: 
+➖ total {total_mem}
+➖ available {available_mem}
+➖ used {used_mem} 
 """
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /help
-    # [msg_help_<name>()]
 
     @staticmethod
     def msg_cmd_help():
         return """
-/start - start private bot
-/help - show list of commands
-/select - choose option
-/debug - show debug logs
-/reboot - reboot server
+/start ➖ start private bot
+/help ➖ show list of commands
+/select ➖ choose task to execute
+/system ➖ show system info
+/reboot ➖ reboot system (OS)
+/update ➖ update and reboot bot
+/shutdown ➖ shut down the bot
 """
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /select
-    # [msg_select_<name>()]
+
     @staticmethod
     def msg_cmd_select_placeholder():
-        return "❔ Choose option:"
+        return "❔ Select task:"
 
     @staticmethod
-    def msg_cmd_select_result(option_id):
-        return f"✅ Selected {option_id}."
+    def msg_cmd_select_result(option_name):
+        return f"✅ Starting {option_name}.."
 
     # ----------------------------------------------
-    # SECTION: MESSAGES - /debug
-    # [msg_debug_<name>()]
+    # SECTION: MESSAGES - /system
+
     @staticmethod
     def msg_cmd_system():
-        netw_list = ','.join(f"[{addr.address}]" for addresses in psutil.net_if_addrs().values() for addr in addresses)
-        formatted_addresses = '\n'.join(netw_list.split(',')[:10])
-        cpu_percent = psutil.cpu_percent()
-        cpu_count = psutil.cpu_count()
+        system_info = os.uname()
+        machine = system_info.nodename
+        system_time = datetime.now().strftime("%B %d %Y %H:%M")
         mem = psutil.virtual_memory()
+        cpu_percent = psutil.cpu_percent()
         total_mem = "{:.2f}".format(mem.total / (1024 * 1024))
         available_mem = "{:.2f}".format(mem.available / (1024 * 1024))
         used_mem = "{:.2f}".format(mem.used / (1024 * 1024))
         return f"""
--------------------------------------
-Running on Ubuntu 22.04
--------------------------------------
-CPU usage _____ {cpu_percent}%
-CPU count _____ {cpu_count}
--------------------------------------
-RAM stats  
-Total _________ {total_mem} MB
-Available _____ {available_mem} MB
-Used __________ {used_mem} MB
--------------------------------------
-{formatted_addresses}
--------------------------------------
-"""
+ℹ️ SYSTEM INFO
+🕑 {system_time}
+⚙️ {machine}
 
+CPU stats:
+➖ load {cpu_percent}$
+
+RAM stats, MB: 
+➖ total {total_mem}
+➖ available {available_mem}
+➖ used {used_mem} 
+"""
+    
     # ----------------------------------------------
     # SECTION: MESSAGES - /reboot
-    # [msg_select_<name>()]
+
     @staticmethod
     def msg_cmd_reboot():
         return "⏳ Restarting the server.."
 
     # ----------------------------------------------
+    # SECTION: MESSAGES - /shutdown
+
+    @staticmethod
+    def msg_cmd_shutdown():
+        return "⏳ Restarting the server.."
+
+    # ----------------------------------------------
     # SECTION: MESSAGES - common messages
-    # [msg_common_<name>()]
 
     @staticmethod
     def msg_any_echo_text(message):
@@ -123,47 +132,19 @@ Used __________ {used_mem} MB
         #return f"❔ {file_size_kb} kb"
         return f"❔ Image"
 
-    @staticmethod
-    def msg_common_received_text_from_queue(message):
-        return message
-
     # ----------------------------------------------
-    # SECTION: ERRORS - /start
-    # [err_start_<name>()]
+    # SECTION: ERRORS
 
     @staticmethod
     def err_start_unknown_exception(error):
         return f"""
-❌ Error: Cannot start this bot
--------------------------------------
-{error}
--------------------------------------
-Reach out @alpatievvv to report
+❌ Cannot start this bot. {error}
+Reach out @alpatievvv to support.
 """
-
-    # ----------------------------------------------
-    # SECTION: ERRORS - /help
-    # [err_help_<name>()]
-    
-    # ----------------------------------------------
-    # SECTION: ERRORS - /select
-    # [err_select_<name>()]
-
-    # ----------------------------------------------
-    # SECTION: ERRORS - /debug
-    # [err_debug_<name>()]
-
-    # ----------------------------------------------
-    # SECTION: ERRORS - /reboot
-    # [err_reboot_<name>()]
-
-    # ----------------------------------------------
-    # SECTION: ERRORS - common
-    # [err_common_<name>()]
 
     @staticmethod
     def err_any_unauthorized_chat():
         return """
-❌ Unauthorized user 
-Reach out @alpatievvv to get password
+❌ Unauthorized user.
+Reach out @alpatievvv for support.
 """
