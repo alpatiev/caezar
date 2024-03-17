@@ -29,12 +29,12 @@ database:
   chat_list_table:
     key: "chats"
     row_keys:
-      - media_dir: "media_dir"
-      - info_message: "info_msg"
+      media_dir: "media_dir"
+      info_message: "info_msg"
   logs_list_table:
     key: "logs"
     row_keys:
-      - item: "item"
+      event: "event"
 
 # --------------------------------------------------
 # SECTION: LOGGING
@@ -48,8 +48,6 @@ log_key:
 # SECTION: CONTEXT
 message_context_key:
   awaiting_auth: "awaiting_password"
-  awaiting_prompt: "awaiting_prompt"
-  awaiting_image: "awaiting_image"
 
 # --------------------------------------------------
 # SECTION: TARGETS

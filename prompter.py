@@ -15,10 +15,10 @@ class PromptModule(BotModule):
         pass
 
     def start(self, config):
-        print(">>")
+        print(">>> module_prompt started..")
 
     def stop(self):
-        print(">>")
+        print(">>> module_prompt stopped")
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /start
@@ -29,7 +29,7 @@ class PromptModule(BotModule):
         return f"✅ Started bot for chat {chat_id}"
 
     @staticmethod
-    def msg_start_system_is_up():
+    def msg_any_boot():
         system_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         mem = psutil.virtual_memory()
         total_mem = "{:.2f}".format(mem.total / (1024 * 1024))
@@ -53,7 +53,7 @@ Used __________ {used_mem} MB
     # [msg_help_<name>()]
 
     @staticmethod
-    def msg_help_show_help_info():
+    def msg_cmd_help():
         return """
 /start - start private bot
 /help - show list of commands
@@ -66,18 +66,18 @@ Used __________ {used_mem} MB
     # SECTION: MESSAGES - /select
     # [msg_select_<name>()]
     @staticmethod
-    def msg_select_choose_placeholder():
+    def msg_cmd_select_placeholder():
         return "❔ Choose option:"
 
     @staticmethod
-    def msg_select_chosen(option_id):
+    def msg_cmd_select_result(option_id):
         return f"✅ Selected {option_id}."
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /debug
     # [msg_debug_<name>()]
     @staticmethod
-    def msg_debug_show_system_info():
+    def msg_cmd_system():
         netw_list = ','.join(f"[{addr.address}]" for addresses in psutil.net_if_addrs().values() for addr in addresses)
         formatted_addresses = '\n'.join(netw_list.split(',')[:10])
         cpu_percent = psutil.cpu_percent()
@@ -106,7 +106,7 @@ Used __________ {used_mem} MB
     # SECTION: MESSAGES - /reboot
     # [msg_select_<name>()]
     @staticmethod
-    def msg_reboot_server():
+    def msg_cmd_reboot():
         return "⏳ Restarting the server.."
 
     # ----------------------------------------------
@@ -114,11 +114,11 @@ Used __________ {used_mem} MB
     # [msg_common_<name>()]
 
     @staticmethod
-    def msg_common_echo_message(message):
+    def msg_any_echo_text(message):
         return f"❔ {message}"
 
     @staticmethod
-    def msg_common_echo_image():
+    def msg_any_echo_image():
         #file_size_kb = image.sizr
         #return f"❔ {file_size_kb} kb"
         return f"❔ Image"
@@ -162,7 +162,7 @@ Reach out @alpatievvv to report
     # [err_common_<name>()]
 
     @staticmethod
-    def err_common_unauthorized_chat():
+    def err_any_unauthorized_chat():
         return """
 ❌ Unauthorized user 
 Reach out @alpatievvv to get password

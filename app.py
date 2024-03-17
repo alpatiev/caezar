@@ -12,8 +12,8 @@ python app.py [--install | --update | --start | --stop | --view | --auth <token>
 
 Options:
   --install     Install the application.
-  --update      Update the application with repo.
-  --start       Start the bot.
+  --update      Update the application with repo and run.
+  --start       Start the bot on background.
   --stop        Stop the bot, terminate deamon.
   --view        Enter application console
   --auth        Save new configuration, 
@@ -60,7 +60,10 @@ def update_auth(bot_token, root_chat):
         file.writelines(lines)
 
 def parse_config():
-    return "0xffffffff"
+    with open("config.yaml", "r") as yaml_file:
+        data = yaml.safe_load(yaml_file)
+    #auth_token = data.get("authentification", {}).get("bot_token", None)
+    return data
 
 # --------------------------------------------------
 # SECTION: INSTALL
@@ -88,12 +91,12 @@ def start_application():
         pid_str= ''.join(filter(str.isdigit, match.group(1)))
         if pid_str:
             pid = int(pid_str) 
-            print(f"Founded pid: {pid}")
+            print(f">>> launched on pid: {pid}")
             update_pid(pid)
         else:
-            print("invalid pid")
+            print(">>> error: invalid pid")
     else:
-        print("No pid found.")
+        print(">>> error: no pid found")
     
 # --------------------------------------------------
 # SECTION: STOP
@@ -101,25 +104,21 @@ def start_application():
 def stop_application():
     pid = get_pid()
     if pid:
+        print(f">>> calling kill pid: {pid}..")
         call_daemon("--kill", pid)
         update_pid("")
-        print("> Killed successfully")
     else:
-        print("> App is not running")
+        print(">>> bot is not running")
 
 # --------------------------------------------------
 # SECTION: VIEW
 
 def view_application():
-    if os.path.isfile("daemons.txt"):
-        with open("daemons.txt", "r") as file:
-            daemon_pid = file.read().strip()        
-        if daemon_pid:
-            print("Daemon process is running with PID:", daemon_pid)
-        else:
-            print("Daemon PID does not exist in daemons.txt.")
+    pid = get_pid()
+    if pid:
+        print(f">>> running on pid: {pid}")
     else:
-        print("Daemons file does not exist.")
+        print(">>> no daemon found")
 
 # --------------------------------------------------
 # SECTION: AUTH
