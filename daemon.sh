@@ -1,17 +1,14 @@
 #!/bin/bash
 
-# --boot + PATH -> returns PID
+# --boot -> returns PID
 if [ "$1" = "--boot" ]; then
-    "$2" &
-    echo $!
-    exit 0
+    python caesar.py > /dev/null 2>&1 & 
+    echo "pid:$! "
 fi
 
 # --kill + PID -> status code
 if [ "$1" = "--kill" ]; then
-    pid="$2"
-    echo "Killing daemon with PID: $pid"
-    exit 0
+    kill "$2"
 fi
 
 exit 1

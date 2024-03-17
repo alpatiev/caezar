@@ -1,30 +1,5 @@
 # Descirption
-Multitasking bot for local or backend deployment.
-
-# Installation
-Steps listed below.
-1. Create and activate environment.
-```
-python -m venv env
-source env/bin/activate 
-```
-
-2. Requirements
-```
-pip install -r requirements.txt
-```
-
-# Deployment
-Pipeline for reboot and first run.
-1. Activate environment
-```
-source env/bin/activate 
-```
-
-2. Run
-```
-python app.py <bot_token> <target_chat>
-```
+Bot with targeted chat.
 
 # Exit codes reference.
 ```

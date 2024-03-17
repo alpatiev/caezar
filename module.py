@@ -8,7 +8,7 @@ import abc
 class BotModule(abc.ABC):
 
     @abc.abstractmethod
-    def start(self, config=None):
+    def start(self, config):
         pass
 
     @abc.abstractmethod

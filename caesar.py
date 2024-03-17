@@ -5,12 +5,13 @@ import time
 import logging
 import asyncio
 import subprocess
+from app import parse_config
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 from logger import LogModule
 from storer import StorageModule
+from prompter import PromptModule
 from publisher import PublisherModule
-from storer import StorageModule
 
 # --------------------------------------------------
 # ENTITY: BOT
@@ -22,7 +23,8 @@ class CaesarBot:
     # ----------------------------------------------
     # SECTION: LIFECYCLE
 
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
         self.application = None
         self.module_logger = None
         self.module_storage = None
@@ -32,8 +34,7 @@ class CaesarBot:
         self.root_chat = None
 
     def start(self):
-        config = self.__load_config()
-        self.__start_init_modules(config)
+        self.__start_init_modules()
         self.__start_observing()
         self.__start_logging()
         self.__run_application()
@@ -44,13 +45,20 @@ class CaesarBot:
     # ----------------------------------------------
     # SECTION: SETUPS
 
-    def __load_config(self):
-        print("called")
-        return "4"
-
-    def __start_init_modules(self, config):
-        self.__schedule_boot_message()
+    def __start_init_modules(self):
+        print(self.config)
+        self.debug_print_daemon()
+        exit(0)
+        self.config = None
         ##self.storage_module.connect_database()
+
+    def debug_print_daemon(self):
+        s = 0
+        for _ in range(30):  # Corrected the syntax for the loop
+            with open("debug.txt", 'w') as file:
+                file.write(f"running for {s} seconds..")
+            s += 1
+            time.sleep(1)
 
     def __start_message_observing(self):  
         self.module_publisher = MessagePublisher(self.config_path, self.__received_new_shared_message) 
@@ -171,7 +179,7 @@ class CaesarBot:
     # SECTION: PUBLISH METHODS
 
     def __schedule_boot_message(self):
-        boot_message = self.prompt_module.msg_start_system_is_up()
+        boot_message = self.module_prompts.msg_start_system_is_up()
         with open('buffer.json', 'r+') as file:
             data = json.load(file)
             data['message_queue'].append(boot_message)
@@ -180,7 +188,7 @@ class CaesarBot:
 
     def __received_new_shared_message(self, message):
         try:
-            formatted_message = self.prompt_module.msg_common_received_text_from_queue(message)
+            formatted_message = self.module_prompts.msg_common_received_text_from_queue(message)
             asyncio.run(self.__send_message(self.chat_id, formatted_message))
         except Exception as e:
             print("Error sending message:", e)       
@@ -188,3 +196,12 @@ class CaesarBot:
     async def __send_message(self, chat_id, message):
         await self.application.bot.send_message(chat_id=chat_id, text=message)
         self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+# --------------------------------------------------
+# SECTION: MAIN
+# Just run the script.
+
+if __name__ == "__main__":
+    config = parse_config()
+    bot = CaesarBot(config)
+    bot.start()

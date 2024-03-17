@@ -14,11 +14,11 @@ class PromptModule(BotModule):
     def __init__(self):
         pass
 
-    def __start(self):
-        pass
+    def start(self, config):
+        print(">>")
 
-    def __stop(self):
-        pass
+    def stop(self):
+        print(">>")
 
     # ----------------------------------------------
     # SECTION: MESSAGES - /start

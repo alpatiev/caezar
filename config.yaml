@@ -6,6 +6,12 @@
 ---
 # --------------------------------------------------
 # SECTION: AUTH
+bot_threading:
+  pid: ""
+  observing_interval: 20
+
+# --------------------------------------------------
+# SECTION: AUTH
 authentification:
   bot_token: "6368855906:AAFChqeoftuth2Y7LsOhkpgOSMMoD7yoD2o"
   root_chat: "983280553"
@@ -50,8 +56,3 @@ message_context_key:
 module_target_id:
   local: "server.machine"
   stability: "stability.ai"
-
-# --------------------------------------------------
-# SECTION: THREADING
-threading:
-  observing_interval: 20

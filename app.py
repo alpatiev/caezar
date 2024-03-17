@@ -1,16 +1,8 @@
 import os
+import re
 import sys
+import yaml
 import daemon
-
-# --------------------------------------------------
-# SECTION: DAEMON
-
-def call_daemon(command, value):
-    bash_script_path = f"./daemon.sh {command} {value}"
-    output_stream = os.popen(bash_script_path)
-    output = output_stream.read()
-    output_stream.close()
-    return output
 
 # --------------------------------------------------
 # SECTION: CONSOLE
@@ -31,46 +23,94 @@ Options:
 """)
 
 # --------------------------------------------------
+# SECTION: DAEMON
+
+def call_daemon(command, value=None):
+    bash_script_path = f"./daemon.sh {command} {value}"
+    output_stream = os.popen(bash_script_path)
+    output = output_stream.read()
+    output_stream.close()
+    return output
+
+# --------------------------------------------------
+# SECTION: CONFIG
+
+def get_pid():
+    with open("config.yaml", 'r') as file:
+        lines = file.readlines()
+    pid_line = lines[9] 
+    pid_value = pid_line.split(":")[1].strip().strip("\"")
+    return int(pid_value) if pid_value else None
+
+def update_pid(new_pid):
+    with open("config.yaml", 'r') as file:
+        lines = file.readlines()   
+    lines[9] = f"  pid: \"{new_pid}\"\n"
+    with open("config.yaml", 'w') as file:
+        file.writelines(lines)
+
+def update_auth(bot_token, root_chat):
+    with open("config.yaml", 'r') as file:
+        lines = file.readlines()
+    bot_token_line = f"  bot_token: \"{bot_token}\"\n"
+    root_chat_line = f"  root_chat: \"{root_chat}\"\n"
+    lines[15] = bot_token_line
+    if root_chat_line:
+        lines[16] = root_chat_line
+    with open("config.yaml", 'w') as file:
+        file.writelines(lines)
+
+def parse_config():
+    return "0xffffffff"
+
+# --------------------------------------------------
 # SECTION: INSTALL
 
 def install_application():
-    print("install")
+    os.system("pip install -r requirements.txt")
+    os.system("chmod +x ./daemon.sh")
 
 # --------------------------------------------------
 # SECTION: UPDATE
 
 def update_application():
-    print("updateee")
+    stop_application()
+    os.system("git pull")
+    start_application()
 
 # --------------------------------------------------
 # SECTION: START
 
 def start_application():
-    print("Starting the application...")
-    if os.path.isfile("daemons.txt"):
-        print("daemons.txt exists.")
-        with open("daemons.txt", "r") as file:
-            existing_pid = file.read().strip()
-        if existing_pid:
-            print("Daemon already running with PID:", existing_pid)
-            return existing_pid
-
-    output = call_daemon("--boot", "python bot/boot.py")
-    # Print the output
-    print(output)
+    output = call_daemon("--boot")
+    match = re.search(r'pid:(\d+)', output)
+    if match:
+        pid_str= ''.join(filter(str.isdigit, match.group(1)))
+        if pid_str:
+            pid = int(pid_str) 
+            print(f"Founded pid: {pid}")
+            update_pid(pid)
+        else:
+            print("invalid pid")
+    else:
+        print("No pid found.")
     
-
 # --------------------------------------------------
 # SECTION: STOP
 
 def stop_application():
-    print("stop")
+    pid = get_pid()
+    if pid:
+        call_daemon("--kill", pid)
+        update_pid("")
+        print("> Killed successfully")
+    else:
+        print("> App is not running")
 
 # --------------------------------------------------
 # SECTION: VIEW
 
 def view_application():
-    # Check if the daemons.txt file exists
     if os.path.isfile("daemons.txt"):
         with open("daemons.txt", "r") as file:
             daemon_pid = file.read().strip()        
@@ -84,16 +124,8 @@ def view_application():
 # --------------------------------------------------
 # SECTION: AUTH
 
-def auth_application(bot_token, root_chat, path="bot/config.yaml"):
-    with open(path, 'r') as file:
-        lines = file.readlines()
-    bot_token_line = f"  bot_token: \"{bot_token}\"\n"
-    root_chat_line = f"  root_chat: \"{root_chat}\"\n"
-    lines[9] = bot_token_line
-    if root_chat_line:
-        lines[10] = root_chat_line
-    with open(path, 'w') as file:
-        file.writelines(lines)
+def auth_application(bot_token, root_chat):
+    update_auth(bot_token, root_chat)
 
 # --------------------------------------------------
 # ENTITY: APPLICATION
