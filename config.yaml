@@ -13,9 +13,9 @@ bot_threading:
 
 # --------------------------------------------------
 # SECTION: AUTH
+authentification:
   bot_token: ""
   root_chat: ""
-  root_chat: "983280553"
 
 # --------------------------------------------------
 # SECTION: RESOURCES

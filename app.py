@@ -56,9 +56,9 @@ def update_auth(bot_token, root_chat):
         lines = file.readlines()
     bot_token_line = f"  bot_token: \"{bot_token}\"\n"
     root_chat_line = f"  root_chat: \"{root_chat}\"\n"
-    lines[15] = bot_token_line
+    lines[16] = bot_token_line
     if root_chat_line:
-        lines[16] = root_chat_line
+        lines[17] = root_chat_line
     with open("config.yaml", 'w') as file:
         file.writelines(lines)
 
