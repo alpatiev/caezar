@@ -13,8 +13,8 @@ bot_threading:
 
 # --------------------------------------------------
 # SECTION: AUTH
-authentification:
-  bot_token: "6368855906:AAFChqeoftuth2Y7LsOhkpgOSMMoD7yoD2o"
+  bot_token: ""
+  root_chat: ""
   root_chat: "983280553"
 
 # --------------------------------------------------

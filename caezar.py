@@ -5,7 +5,7 @@ import time
 import logging
 import asyncio
 import subprocess
-from app import parse_config, update_pid, update_application, reboot_application, stop_application
+from app import parse_config, update_pid, stop_application
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, ContextTypes, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 from logger import LoggerModule
@@ -76,7 +76,6 @@ class CaesarBot:
         self.application.add_handler(CommandHandler("help", self.__handler_command_help))
         self.application.add_handler(CommandHandler("select", self.__handler_command_select))
         self.application.add_handler(CommandHandler("system", self.__handler_command_system))
-        self.application.add_handler(CommandHandler("update", self.__handler_command_update))
         self.application.add_handler(CommandHandler("reboot", self.__handler_command_reboot))
         self.application.add_handler(CommandHandler("shutdown", self.__handler_command_shutdown))
         self.application.add_handler(CallbackQueryHandler(self.__handler_callback_select_command))
@@ -121,24 +120,21 @@ class CaesarBot:
     # ----------------------------------------------
     # COMMAND: SELECT
 
+    # -> CALLBACK CODE 1 FOR com.id_daemons.task
+    # -> CALLBACK CODE 2 FOR com.fetch_db.task
+    # -> CALLBACK CODE 3 FOR com.cleanup.task
     async def __handler_command_select(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
         if self.__verified_chat(chat_id):        
             keyboard = [
                 [
-                    InlineKeyboardButton("1", callback_data="1"),
+                    InlineKeyboardButton("Inspect daemons", callback_data=1),
                 ],
                 [
-                    InlineKeyboardButton("2", callback_data="2"),
+                    InlineKeyboardButton("Fetch database", callback_data=2),
                 ],
                 [
-                    InlineKeyboardButton("3", callback_data="3"),
-                ],
-                [
-                    InlineKeyboardButton("4", callback_data="4"),
-                ],
-                [
-                    InlineKeyboardButton("5", callback_data="5"),
+                    InlineKeyboardButton("Clean cache", callback_data=3),
                 ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
@@ -161,53 +157,77 @@ class CaesarBot:
             reply = self.module_prompts.err_any_unauthorized_chat() 
             self.module_logger.info_unrecognized_chat_attempt("/system", chat_id)
         await context.bot.send_message(chat_id=chat_id, text=reply)
-    
-    # ----------------------------------------------
-    # COMMAND: UPDATE
-    
-    async def __handler_command_update(self, update: Update, context) -> None:
-        chat_id = update.message.chat_id
-        if self.__verified_chat(chat_id):
-            reply = self.module_prompts.msg_cmd_update()
-        else:
-            reply = self.module_prompts.err_any_unauthorized_chat()
-            self.module_logger.info_unrecognized_chat_attempt("/update", chat_id) 
-        await context.bot.send_message(chat_id=chat_id, text=reply)
-        self.application.stop_
-        update_application()
 
     # ----------------------------------------------
     # COMMAND: REBOOT
     
+    # -> CALLBACK CODE 4 FOR com.reboot.task
+    # -> CALLBACK CODE 5 FOR com.pass.task
     async def __handler_command_reboot(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
         if self.__verified_chat(chat_id):
-            reply = self.module_prompts.msg_cmd_reboot()
+            keyboard = [[InlineKeyboardButton("✅", callback_data=4), InlineKeyboardButton("❌", callback_data=5)]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_prompt = self.module_prompts.msg_cmd_reboot_placeholder()
+            await update.message.reply_text(reply_prompt, reply_markup=reply_markup)
         else:
             reply = self.module_prompts.err_any_unauthorized_chat() 
             self.module_logger.info_unrecognized_chat_attempt("/reboot", chat_id)
-        await context.bot.send_message(chat_id=chat_id, text=reply)
-        reboot_application()
+            await context.bot.send_message(chat_id=chat_id, text=reply)    
 
     # ----------------------------------------------
     # COMMAND: SHUTDOWN
 
+    # -> CALLBACK CODE 6 FOR com.kamikadze.task
+    # -> CALLBACK CODE 7 FOR com.pass.task
     async def __handler_command_shutdown(self, update: Update, context) -> None:
         chat_id = update.message.chat_id
         if self.__verified_chat(chat_id):
-            reply = self.module_prompts.msg_cmd_shutdown()
+            keyboard = [[InlineKeyboardButton("✅", callback_data=6), InlineKeyboardButton("❌", callback_data=7)]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            reply_prompt = self.module_prompts.msg_cmd_shutdown_placeholder()
+            await update.message.reply_text(reply_prompt, reply_markup=reply_markup)
         else:
             reply = self.module_prompts.err_any_unauthorized_chat() 
             self.module_logger.info_unrecognized_chat_attempt("/shutdown", chat_id)
-        await context.bot.send_message(chat_id=chat_id, text=reply)
-        stop_application()
+            await context.bot.send_message(chat_id=chat_id, text=reply)
     # ----------------------------------------------
     # HANDLERS: CALLBACKS
 
+    # <- CALLBACK CODE 1 FOR com.id_daemons.task
+    # <- CALLBACK CODE 2 FOR com.fetch_db.task
+    # <- CALLBACK CODE 3 FOR com.cleanup.task
+    # <- CALLBACK CODE 4 FOR com.reboot.task
+    # <- CALLBACK CODE 5 FOR com.pass.task
+    # <- CALLBACK CODE 6 FOR com.kamikadze.task
+    # <- CALLBACK CODE 7 FOR com.pass.task
     async def __handler_callback_select_command(self, update: Update, context) -> None:
         query = update.callback_query
-        option = query.data
-        reply = self.module_prompts.msg_cmd_select_result(option)
+        option = int(query.data)  # Converting option to integer since callback data is usually in string format
+
+        if option == 1:
+            reply = self.module_prompts.msg_cmd_select_result("com.id_daemons.task")
+        elif option == 2:
+            reply = self.module_prompts.msg_cmd_select_result("com.fetch_db.task")
+        elif option == 3:
+            reply = self.module_prompts.msg_cmd_select_result("com.cleanup.task")
+        elif option == 4:
+            reply = self.module_prompts.msg_cmd_reboot_confirmed()
+            await query.answer()
+            await query.edit_message_text(text=reply)
+            os.command("reboot")
+        elif option == 5:
+            reply = self.module_prompts.msg_cmd_reboot_cancelled()
+        elif option == 6:
+            reply = self.module_prompts.msg_cmd_shutdown_confirmed()
+            await query.answer()
+            await query.edit_message_text(text=reply)
+            stop_application()
+        elif option == 7:
+            reply = self.module_prompts.msg_cmd_shutdown_cancelled()
+        else:
+            reply = self.module_prompts.err_start_unknown_exception(option)
+
         await query.answer()
         await query.edit_message_text(text=reply)
 

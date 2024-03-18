@@ -60,12 +60,11 @@ RAM stats:
     @staticmethod
     def msg_cmd_help():
         return """
-/start ➖ start private bot
+/start ➖ start this bot
 /help ➖ show list of commands
 /select ➖ choose task to execute
-/system ➖ show server info
-/reboot ➖ reboot this bot
-/update ➖ update and reboot bot
+/system ➖ show system info
+/reboot ➖ reboot host machine
 /shutdown ➖ shut down the bot
 """
 
@@ -113,25 +112,30 @@ RAM stats:
     # SECTION: MESSAGES - /reboot
 
     @staticmethod
-    def msg_cmd_reboot():
-        return "⏳ Restarting the the bot.."
-
-    # ----------------------------------------------
-    # SECTION: MESSAGES - /update
+    def msg_cmd_reboot_placeholder():
+        return "⚠️ Confirm server reboot:"
 
     @staticmethod
-    def msg_cmd_update():
-        return """
-⏳ Updating the bot version..
-❕ Bot will be relaunched soon.
-"""
+    def msg_cmd_reboot_confirmed():
+        return "🔄 Restarting the the server.."
 
+    @staticmethod
+    def msg_cmd_reboot_cancelled():
+        return "❕ Server reboot cancelled."
     # ----------------------------------------------
     # SECTION: MESSAGES - /shutdown
 
     @staticmethod
-    def msg_cmd_shutdown():
+    def msg_cmd_shutdown_placeholder():
+        return "⚠️ Confirm bot shutdown:"
+
+    @staticmethod
+    def msg_cmd_shutdown_confirmed():
         return "💀 Shutting down the bot.."
+
+    @staticmethod
+    def msg_cmd_shutdown_cancelled():
+        return "❕ Bot shutdown cancelled."
 
     # ----------------------------------------------
     # SECTION: MESSAGES - common messages
@@ -142,8 +146,6 @@ RAM stats:
 
     @staticmethod
     def msg_any_echo_image():
-        #file_size_kb = image.sizr
-        #return f"❔ {file_size_kb} kb"
         return f"❔ Image"
 
     # ----------------------------------------------
@@ -151,14 +153,8 @@ RAM stats:
 
     @staticmethod
     def err_start_unknown_exception(error):
-        return f"""
-❌ Cannot start this bot. {error}
-Reach out @alpatievvv to support.
-"""
+        return f"❌ Cannot start this bot. Reach out @alpatievvv for support. {error}."
 
     @staticmethod
     def err_any_unauthorized_chat():
-        return """
-❌ Unauthorized user.
-Reach out @alpatievvv for support.
-"""
+        return "❌ Unauthorized user. Reach out @alpatievvv for support."
