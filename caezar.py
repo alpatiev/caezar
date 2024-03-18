@@ -215,7 +215,7 @@ class CaesarBot:
             reply = self.module_prompts.msg_cmd_reboot_confirmed()
             await query.answer()
             await query.edit_message_text(text=reply)
-            os.command("reboot")
+            subprocess.run(["reboot"])
         elif option == 5:
             reply = self.module_prompts.msg_cmd_reboot_cancelled()
         elif option == 6:

@@ -14,7 +14,7 @@ python app.py [--install | --update | --start | --stop   |
 
 Options:
   --install     Install the application.
-  --update      Update the application with repo and run.
+  --update      Update the application with repo.
   --start       Start the bot on background.
   --stop        Stop the bot, terminate deamon.
   --reboot      Restarting this bot.
@@ -79,10 +79,8 @@ def install_application():
 # SECTION: UPDATE
 
 def update_application():
-    stop_application()
     os.system("git fetch origin")
     os.system("git reset --hard origin/master")
-    start_application()
 
 # --------------------------------------------------
 # SECTION: START
